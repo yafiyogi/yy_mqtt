@@ -28,20 +28,10 @@
 
 #include <string_view>
 
-#include "yy_mqtt_constants.h"
-#include "yy_mqtt_types.h"
+#include "yy_cpp/yy_vector.h"
 
 namespace yafiyogi::yy_mqtt {
 
-std::string_view topic_trim(const std::string_view p_topic) noexcept;
-TopicLevels topic_tokenize(const std::string_view p_topic) noexcept;
-bool topic_validate(std::string_view p_topic,
-                    const TopicType type);
-bool topic_validate(std::string_view p_topic,
-                    const TopicType p_type);
-bool topic_match(const TopicLevels & p_filter,
-                 const TopicLevels & p_topic) noexcept;
-bool topic_match(const std::string_view & p_filter,
-                 const std::string_view & p_topic) noexcept;
+using TopicLevels = yy_quad::simple_vector<std::string_view, yy_quad::ClearAction::Keep>;
 
 } // namespace yafiyogi::yy_mqtt

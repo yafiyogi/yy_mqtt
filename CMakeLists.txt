@@ -50,6 +50,7 @@ target_sources(yy_mqtt
 set(YY_MQTT_HEADERS
   "yy_mqtt_constants.h"
   "yy_mqtt_faster_topics.h"
+  "yy_mqtt_types.h"
   "yy_mqtt_util.h" )
 
 add_subdirectory(unit_tests)
