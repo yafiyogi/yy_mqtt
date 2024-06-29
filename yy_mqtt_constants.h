@@ -47,4 +47,6 @@ enum class TopicType {
   Filter
 };
 
+inline constexpr int mqtt_default_port = 1883;
+
 } // namespace yafiyogi::yy_mqtt
