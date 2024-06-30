@@ -61,8 +61,8 @@ class Query final
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
 
-    explicit Query(trie_vector && p_nodes,
-                   data_vector && p_data) noexcept:
+    constexpr explicit Query(trie_vector && p_nodes,
+                             data_vector && p_data) noexcept:
       m_nodes(std::move(p_nodes)),
       m_data(std::move(p_data))
     {
@@ -73,14 +73,14 @@ class Query final
 
     Query() = delete;
     Query(const Query &) = delete;
-    Query(Query &&) noexcept = default;
-    ~Query() = default;
+    constexpr Query(Query &&) noexcept = default;
+    constexpr ~Query() = default;
 
     Query & operator=(const Query &) = delete;
-    Query & operator=(Query &&) noexcept = default;
+    constexpr Query & operator=(Query &&) noexcept = default;
 
     [[nodiscard]]
-    payloads_span_type find(std::string_view topic) noexcept
+    constexpr payloads_span_type find(std::string_view topic) noexcept
     {
       m_search_states.clear(yy_quad::ClearAction::Keep);
       m_payloads.clear(yy_quad::ClearAction::Keep);
@@ -108,15 +108,15 @@ class Query final
     }
 
   private:
-    void add_wildcards(node_type * const p_node,
-                       queue & p_states_list) noexcept
+    constexpr void add_wildcards(node_type * const p_node,
+                                 queue & p_states_list) noexcept
     {
       add_node_state(mqtt_detail::TopicSingleLevelWildcardChar, p_node, p_states_list);
       add_node_state(mqtt_detail::TopicMultiLevelWildcardChar, p_node, p_states_list);
     }
 
-    static void add_payload(node_type * p_node,
-                            payloads_type & p_payloads) noexcept
+    static constexpr void add_payload(node_type * p_node,
+                                      payloads_type & p_payloads) noexcept
     {
       if(!p_node->empty())
       {
@@ -124,8 +124,8 @@ class Query final
       }
     }
 
-    static node_type * get_state(node_type * p_node,
-                                 const label_type p_label)
+    static constexpr node_type * get_state(node_type * p_node,
+                                           const label_type p_label)
     {
       YY_ASSERT(p_node);
 
@@ -140,18 +140,18 @@ class Query final
       return l_state;
     }
 
-    static void add_state(const label_type label,
-                          node_type * p_state,
-                          queue & p_states_list) noexcept
+    static constexpr void add_state(const label_type label,
+                                    node_type * p_state,
+                                    queue & p_states_list) noexcept
     {
       YY_ASSERT(p_state);
 
       p_states_list.emplace_back(std::make_tuple(p_state, label));
     }
 
-    static void add_node_state(const label_type p_label,
-                               node_type * p_node,
-                               queue & p_states_list)
+    static constexpr void add_node_state(const label_type p_label,
+                                         node_type * p_node,
+                                         queue & p_states_list)
     {
       YY_ASSERT(p_node);
 
@@ -163,9 +163,9 @@ class Query final
       bool add = p_node->find_edge(add_state_do, p_label);
     }
 
-    bool next(const char p_ch,
-              const bool p_last,
-              payloads_type & payloads) noexcept
+    constexpr bool next(const char p_ch,
+                        const bool p_last,
+                        payloads_type & payloads) noexcept
     {
       queue next_states;
       next_states.reserve(3);

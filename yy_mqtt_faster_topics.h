@@ -72,7 +72,7 @@ class Query final
       m_payloads.reserve(3);
     }
 
-    Query() noexcept = default;
+    constexpr Query() noexcept = default;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
     constexpr ~Query() = default;
@@ -223,9 +223,9 @@ using faster_topics = yy_data::fm_flat_trie<std::string,
                                             ValueType,
                                             faster_topics_detail::Query>;
 template<typename ValueType>
-void faster_topics_add(faster_topics<ValueType> & topics,
-                       std::string_view topic,
-                       const ValueType & value)
+constexpr void faster_topics_add(faster_topics<ValueType> & topics,
+                                 std::string_view topic,
+                                 const ValueType & value)
 {
   yy_quad::simple_vector<std::string> topic_levels;
   yy_util::tokenizer<std::string::value_type> tokenizer{yy_quad::make_const_span(topic),

@@ -67,7 +67,7 @@ class Query final
       m_payloads.reserve(3);
     }
 
-    Query() noexcept = default;
+    constexpr Query() noexcept = default;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
     constexpr ~Query() = default;
@@ -128,7 +128,7 @@ class Query final
       }
     }
 
-    void constexpr find_span(topic_type p_topic) noexcept
+    constexpr void find_span(topic_type p_topic) noexcept
     {
       auto do_add_separator_wildcards = [this](node_type ** separator_node, size_type) {
         add_wildcards(*separator_node, topic_type{}, m_search_states);

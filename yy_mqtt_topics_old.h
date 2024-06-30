@@ -63,7 +63,7 @@ class Query final
     using value_type = typename traits::value_type;
     using payloads_type = std::vector<const node_type *>;
 
-    explicit Query(root_node_ptr p_root) noexcept:
+    constexpr explicit Query(root_node_ptr p_root) noexcept:
       m_root(std::move(p_root))
     {
     }
@@ -77,8 +77,8 @@ class Query final
     Query & operator=(Query &&) = delete;
 
     template<typename Visitor>
-    bool find(std::string_view topic,
-              Visitor && visitor) noexcept
+    constexpr bool find(std::string_view topic,
+                        Visitor && visitor) noexcept
     {
       bool found = false;
       m_search_states.clear();
@@ -121,8 +121,8 @@ class Query final
     }
 
   private:
-    static bool add_wildcards(const node_type * p_node,
-                              queue & p_states_list) noexcept
+    static constexpr bool add_wildcards(const node_type * p_node,
+                                        queue & p_states_list) noexcept
     {
       bool added = false;
 
@@ -139,8 +139,8 @@ class Query final
       return added;
     }
 
-    static void add_payload(const node_type * p_node,
-                            payloads_type & p_payloads) noexcept
+    static constexpr void add_payload(const node_type * p_node,
+                                      payloads_type & p_payloads) noexcept
     {
       if(!p_node->empty())
       {
@@ -148,9 +148,9 @@ class Query final
       }
     }
 
-    static bool add_state(const label_type label,
-                          const node_type * p_state,
-                          queue & p_states_list) noexcept
+    static constexpr bool add_state(const label_type label,
+                                    const node_type * p_state,
+                                    queue & p_states_list) noexcept
     {
       if(p_state)
       {
@@ -160,9 +160,9 @@ class Query final
       return nullptr != p_state;
     }
 
-    bool next(const char p_ch,
-              const bool p_last,
-              payloads_type & payloads) noexcept
+    constexpr bool next(const char p_ch,
+                        const bool p_last,
+                        payloads_type & payloads) noexcept
     {
       queue new_states;
 
