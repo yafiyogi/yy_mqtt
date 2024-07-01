@@ -34,6 +34,8 @@
 namespace yafiyogi::yy_mqtt {
 
 std::string_view topic_trim(const std::string_view p_topic) noexcept;
+TopicLevels & topic_tokenize(TopicLevels & p_levels,
+                             const std::string_view p_topic) noexcept;
 TopicLevels topic_tokenize(const std::string_view p_topic) noexcept;
 bool topic_validate(std::string_view p_topic,
                     const TopicType type);

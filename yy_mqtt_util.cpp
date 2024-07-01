@@ -41,17 +41,27 @@ std::string_view topic_trim(const std::string_view p_topic) noexcept
   return yy_util::trim(yy_util::trim(p_topic), mqtt_detail::TopicLevelSeparator);
 }
 
-TopicLevels topic_tokenize(const std::string_view p_topic) noexcept
+TopicLevels & topic_tokenize(TopicLevels & p_levels,
+                           const std::string_view p_topic) noexcept
 {
   yy_util::tokenizer<std::string_view::value_type> tokenizer{yy_quad::make_const_span(p_topic),
                                                              mqtt_detail::TopicLevelSeparatorChar};
-  TopicLevels levels;
+  p_levels.clear();
 
   while(!tokenizer.empty())
   {
     auto level = tokenizer.scan();
-    levels.emplace_back(std::string_view{level.begin(), level.end()});
+    p_levels.emplace_back(std::string_view{level.begin(), level.end()});
   }
+
+  return p_levels;
+}
+
+TopicLevels topic_tokenize(const std::string_view p_topic) noexcept
+{
+  TopicLevels levels;
+
+  topic_tokenize(levels, p_topic);
 
   return levels;
 }
