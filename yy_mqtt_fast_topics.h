@@ -49,12 +49,12 @@ class Query final
     using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
-    enum class search_type {Char, SingleLevel, MultiLevel};
+    enum class search_type {Literal, SingleLevel, MultiLevel};
     struct state_type
     {
         topic_type topic{};
         node_type * state{};
-        search_type search = search_type::Char;
+        search_type search = search_type::Literal;
     };
     using queue = yy_quad::vector<state_type>;
 
@@ -134,7 +134,7 @@ class Query final
         add_wildcards(*separator_node, topic_type{}, m_search_states);
       };
 
-      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Char});
+      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Literal});
       add_wildcards(m_nodes.begin(), p_topic, m_search_states);
 
       while(!m_search_states.empty())
@@ -144,19 +144,21 @@ class Query final
 
         switch(type)
         {
-          case search_type::Char:
+          case search_type::Literal:
           {
             auto next_state_do = [&state](node_type ** edge_node, size_type) {
               state = *edge_node;
             };
 
             bool found_separator = false;
+            bool found = true;
             while(!search_topic.empty())
             {
               const auto topic_part = search_topic[0];
 
-              if(!state->find_edge(next_state_do,
-                                   topic_part))
+              found = state->find_edge(next_state_do,
+                                       topic_part);
+              if(!found)
               {
                 break;
               }
@@ -171,7 +173,7 @@ class Query final
               }
             }
 
-            if(search_topic.empty())
+            if(found && search_topic.empty())
             {
               // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
               add_payload(state, m_payloads);
@@ -180,7 +182,7 @@ class Query final
               {
                 // In case of 'abc/cde', try to match 'abc/cde/+' & 'abc/cde/#'
                 [[maybe_unused]]
-                auto found = state->find_edge(do_add_separator_wildcards,
+                auto ignore = state->find_edge(do_add_separator_wildcards,
                                               mqtt_detail::TopicLevelSeparatorChar);
               }
             }
@@ -219,7 +221,14 @@ class Query final
                 auto separator_state = *edge_node;
                 search_topic.inc_begin();
                 // ... try to match 'abc/+/cde
-                m_search_states.emplace_back(state_type{search_topic, separator_state, search_type::Char});
+                if(!search_topic.empty())
+                {
+                  m_search_states.emplace_back(state_type{search_topic, separator_state, search_type::Literal});
+                }
+                else
+                {
+                  add_payload(separator_state, m_payloads);
+                }
                 // ... try to match 'abc/+/+' and 'abc/+/#'
                 add_wildcards(separator_state, search_topic, m_search_states);
               };

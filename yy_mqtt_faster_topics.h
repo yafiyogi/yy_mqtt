@@ -52,14 +52,14 @@ class Query final
     using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
-    enum class search_type {Level, SingleLevelWild, MultiLevelWild};
+    enum class search_type {Literal, SingleLevelWild, MultiLevelWild};
     using tokenizer = yy_util::tokenizer<std::string_view::value_type>;
 
     struct state_type
     {
         topic_type topic{};
         node_type * state{};
-        search_type search = search_type::Level;
+        search_type search = search_type::Literal;
     };
     using queue = yy_quad::vector<state_type>;
 
@@ -103,7 +103,7 @@ class Query final
     {
       YY_ASSERT(p_state);
 
-      auto sub_state_do = [p_topic, p_type, &p_states_list]
+      auto sub_state_do = [p_label, p_topic, p_type, &p_states_list]
                           (node_type ** edge_node, size_type /* pos */) {
         p_states_list.emplace_back(state_type{p_topic, *edge_node, p_type});
       };
@@ -122,21 +122,25 @@ class Query final
       add_sub_state(mqtt_detail::TopicMultiLevelWildcard, p_topic, search_type::MultiLevelWild, p_node, p_states_list);
     }
 
-    static constexpr void add_payload(node_type * p_node,
+    static constexpr bool add_payload(node_type * p_node,
                                       payloads_type & p_payloads) noexcept
     {
       YY_ASSERT(p_node);
 
-      if(!p_node->empty())
+      bool add = !p_node->empty();
+
+      if(add)
       {
         p_payloads.emplace_back(p_node->data());
       }
+
+      return add;
     }
 
     void constexpr find_span(topic_type p_topic) noexcept
     {
       {
-        m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Level});
+        m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Literal});
         add_wildcards(m_nodes.begin(), p_topic, m_search_states);
       }
 
@@ -147,7 +151,7 @@ class Query final
 
         switch(type)
         {
-          case search_type::Level:
+          case search_type::Literal:
           {
             auto next_state_do = [&state](node_type ** edge_node, size_type) {
               state = *edge_node;
@@ -155,11 +159,14 @@ class Query final
 
             tokenizer topic_tokens{search_topic, mqtt_detail::TopicLevelSeparatorChar};
 
-            while(!search_topic.empty())
+            bool found = false;
+            while(!topic_tokens.empty())
             {
               const auto level = topic_tokens.scan();
 
-              if(!state->find_edge(next_state_do, level))
+              found = state->find_edge(next_state_do, level);
+
+              if(!found)
               {
                 break;
               }
@@ -168,7 +175,7 @@ class Query final
               add_wildcards(state, topic_tokens.source(), m_search_states);
             }
 
-            if(topic_tokens.empty())
+            if(found && topic_tokens.empty())
             {
               // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
               add_payload(state, m_payloads);
@@ -196,7 +203,14 @@ class Query final
               auto topic = topic_tokens.source();
               // Topic is 'abc/+/...' so ...
               // ... try to match 'abc/+/cde
-              m_search_states.emplace_back(state_type{topic, state, search_type::Level});
+              if(!topic.empty())
+              {
+                m_search_states.emplace_back(state_type{topic, state, search_type::Literal});
+              }
+              else
+              {
+                add_payload(state, m_payloads);
+              }
               // ... try to match 'abc/+/+' and 'abc/+/#'
               add_wildcards(state, topic, m_search_states);
             }
