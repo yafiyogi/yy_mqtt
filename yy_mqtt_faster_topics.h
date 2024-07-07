@@ -137,7 +137,7 @@ class Query final
       return add;
     }
 
-    void constexpr find_span(topic_type p_topic) noexcept
+    constexpr void find_span(topic_type p_topic) noexcept
     {
       {
         m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Literal});
