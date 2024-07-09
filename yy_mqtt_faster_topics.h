@@ -237,7 +237,7 @@ using faster_topics = yy_data::fm_flat_trie<std::string,
                                             ValueType,
                                             faster_topics_detail::Query>;
 template<typename ValueType>
-constexpr void faster_topics_add(faster_topics<ValueType> & topics,
+constexpr auto faster_topics_add(faster_topics<ValueType> & topics,
                                  std::string_view topic,
                                  const ValueType & value)
 {
@@ -251,7 +251,7 @@ constexpr void faster_topics_add(faster_topics<ValueType> & topics,
     topic_levels.emplace_back(std::string{token.begin(), token.end()});
   }
 
-  topics.add(topic_levels, value);
+  return topics.add(topic_levels, value);
 }
 
 } // namespace yafiyogi::yy_mqtt
