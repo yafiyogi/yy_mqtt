@@ -24,7 +24,7 @@
 
 */
 
-#include "yy_cpp/yy_fm_flat_trie.h"
+#include "yy_cpp/yy_fm_flat_trie_ptr.h"
 #include "yy_cpp/yy_span.h"
 
 #include "yy_mqtt_constants.h"
@@ -36,7 +36,7 @@ template<typename LabelType,
          typename ValueType>
 struct flat_topics_traits
 {
-    using traits = yy_data::fm_flat_trie_detail::trie_ptr_traits<LabelType, ValueType>;
+    using traits = yy_data::fm_flat_trie_ptr_detail::trie_ptr_traits<LabelType, ValueType>;
     using label_type = typename traits::label_type;
     using node_type = typename traits::node_type;
     using value_type = typename traits::value_type;
@@ -286,7 +286,7 @@ class Query final
 } // namespace flat_topics_detail
 
 template<typename ValueType>
-using flat_topics = yy_data::fm_flat_trie<char,
+using flat_topics = yy_data::fm_flat_trie_ptr<char,
                                           ValueType,
                                           flat_topics_detail::Query>;
 

@@ -25,7 +25,7 @@
 */
 
 #include "yy_cpp/yy_assert.h"
-#include "yy_cpp/yy_fm_flat_trie.h"
+#include "yy_cpp/yy_fm_flat_trie_ptr.h"
 #include "yy_cpp/yy_span.h"
 
 #include "yy_mqtt_constants.h"
@@ -38,7 +38,7 @@ template<typename LabelType,
 class Query final
 {
   public:
-    using traits = yy_data::fm_flat_trie_detail::trie_ptr_traits<LabelType, ValueType>;
+    using traits = yy_data::fm_flat_trie_ptr_detail::trie_ptr_traits<LabelType, ValueType>;
     using label_type = typename traits::label_type;
     using node_type = typename traits::node_type;
     using value_type = typename traits::value_type;
@@ -254,8 +254,8 @@ class Query final
 } // namespace fast_topics_detail
 
 template<typename ValueType>
-using fast_topics = yy_data::fm_flat_trie<char,
-                                          ValueType,
-                                          fast_topics_detail::Query>;
+using fast_topics = yy_data::fm_flat_trie_ptr<char,
+                                              ValueType,
+                                              fast_topics_detail::Query>;
 
 } // namespace yafiyogi::yy_mqtt
