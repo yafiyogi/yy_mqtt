@@ -24,8 +24,13 @@
 
 */
 
+#include <tuple>
+#include <string_view>
+
+#include "yy_cpp/yy_assert.h"
 #include "yy_cpp/yy_fm_flat_trie_ptr.h"
 #include "yy_cpp/yy_span.h"
+#include "yy_cpp/yy_vector.h"
 
 #include "yy_mqtt_constants.h"
 
@@ -95,7 +100,7 @@ class Query final
         }
 
         const auto max = topic.size();
-        for(size_t idx = 0; idx < max; ++idx)
+        for(size_type idx = 0; idx < max; ++idx)
         {
           if(!next(topic[idx], idx == (max - 1), m_payloads))
           {

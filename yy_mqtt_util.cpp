@@ -24,14 +24,16 @@
 
 */
 
+#include <cstddef>
+
 #include <stdexcept>
 
-#include "fmt/format.h"
-
 #include "yy_cpp/yy_string_util.h"
+#include "yy_cpp/yy_span.h"
 #include "yy_cpp/yy_tokenizer.h"
 
 #include "yy_mqtt_constants.h"
+#include "yy_mqtt_types.h"
 #include "yy_mqtt_util.h"
 
 namespace yafiyogi::yy_mqtt {
@@ -74,8 +76,8 @@ bool topic_validate(const TopicLevels & p_levels,
     case TopicType::Name:
     case TopicType::Filter:
     {
-      const size_t max_levels = p_levels.size();
-      size_t level_no = 0;
+      const std::size_t max_levels = p_levels.size();
+      std::size_t level_no = 0;
 
       for(const auto & level : p_levels)
       {
@@ -119,9 +121,9 @@ bool topic_validate(const std::string_view p_topic,
 bool topic_match(const TopicLevels & p_filter,
                  const TopicLevels & p_topic) noexcept
 {
-  size_t filter_level_no = 0;
-  const size_t max_topic_level = p_topic.size();
-  size_t topic_level_no = 0;
+  std::size_t filter_level_no = 0;
+  const std::size_t max_topic_level = p_topic.size();
+  std::size_t topic_level_no = 0;
 
   if(!p_filter.empty()
      && !p_topic.empty()

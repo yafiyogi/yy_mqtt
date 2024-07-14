@@ -39,8 +39,7 @@ TopicLevels & topic_tokenize(TopicLevels & p_levels,
 TopicLevels topic_tokenize(const std::string_view p_topic) noexcept;
 bool topic_validate(std::string_view p_topic,
                     const TopicType type);
-bool topic_validate(std::string_view p_topic,
-                    const TopicType p_type);
+bool topic_validate(const TopicType p_type);
 bool topic_match(const TopicLevels & p_filter,
                  const TopicLevels & p_topic) noexcept;
 bool topic_match(const std::string_view & p_filter,

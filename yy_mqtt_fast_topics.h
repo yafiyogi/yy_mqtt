@@ -24,9 +24,16 @@
 
 */
 
+#pragma once
+
+#include <cstdint>
+#include <string_view>
+
 #include "yy_cpp/yy_assert.h"
 #include "yy_cpp/yy_fm_flat_trie_ptr.h"
+#include "yy_cpp//yy_ref_traits.h"
 #include "yy_cpp/yy_span.h"
+#include "yy_cpp/yy_vector.h"
 
 #include "yy_mqtt_constants.h"
 
@@ -49,7 +56,7 @@ class Query final
     using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
-    enum class search_type {Literal, SingleLevel, MultiLevel};
+    enum class search_type:uint8_t {Literal, SingleLevel, MultiLevel};
     struct state_type
     {
         topic_type topic{};

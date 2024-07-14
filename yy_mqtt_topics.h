@@ -26,8 +26,10 @@
 
 #pragma once
 
-#include <string>
+#include <cstddef>
+
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 #include "yy_cpp/yy_trie.h"
@@ -47,6 +49,7 @@ struct topics_traits
     using root_node_ptr = typename trie_node_traits::root_node_ptr;
     using node_edge = typename trie_node_traits::node_edge;
     using value_type = typename trie_node_traits::value_type;
+    using size_type = std::size_t;
 };
 
 template<typename ValueType>
@@ -62,6 +65,7 @@ class Query final
     using queue = std::vector<std::tuple<label_type, node_type *>>;
     using value_type = typename traits::value_type;
     using payloads_type = std::vector<value_type *>;
+    using size_type = typename traits::size_type;
 
     constexpr explicit Query(root_node_ptr p_root) noexcept:
       m_root(std::move(p_root))
@@ -93,7 +97,7 @@ class Query final
         payloads.reserve(3);
 
         const auto max = topic.size();
-        for(size_t idx = 0; idx < max; ++idx)
+        for(size_type idx = 0; idx < max; ++idx)
         {
           if(!next(topic[idx], idx == (max - 1), payloads))
           {

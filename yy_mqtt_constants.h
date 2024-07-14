@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <string_view>
 
 namespace yafiyogi::yy_mqtt {
@@ -42,7 +44,7 @@ inline constexpr std::string_view::value_type TopicSysChar{TopicSys[0]};
 
 } // namespace yafiyogi::yy_mqtt
 
-enum class TopicType {
+enum class TopicType:uint8_t {
   Name,
   Filter
 };
