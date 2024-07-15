@@ -110,8 +110,7 @@ class Query final
         p_states_list.emplace_back(state_type{p_topic, *edge_node, p_type});
       };
 
-      [[maybe_unused]]
-      bool add = p_state->find_edge(sub_state_do, p_label);
+      std::ignore = p_state->find_edge(sub_state_do, p_label);
     }
 
     static constexpr void add_wildcards(node_type * p_node,
@@ -188,8 +187,7 @@ class Query final
               if(!found_separator)
               {
                 // In case of 'abc/cde', try to match 'abc/cde/+' & 'abc/cde/#'
-                [[maybe_unused]]
-                auto ignore = state->find_edge(do_add_separator_wildcards,
+                std::ignore = state->find_edge(do_add_separator_wildcards,
                                               mqtt_detail::TopicLevelSeparatorChar);
               }
             }
@@ -217,8 +215,7 @@ class Query final
               // Topic is 'abc/+', so add payloads.
               add_payload(state, m_payloads);
 
-              [[maybe_unused]]
-              auto found = state->find_edge(do_add_separator_wildcards,
+              std::ignore = state->find_edge(do_add_separator_wildcards,
                                             mqtt_detail::TopicLevelSeparatorChar);
             }
             else
@@ -240,8 +237,7 @@ class Query final
                 add_wildcards(separator_state, search_topic, m_search_states);
               };
 
-              [[maybe_unused]]
-              auto found = state->find_edge(separator_do, search_topic[0]);
+              std::ignore = state->find_edge(separator_do, search_topic[0]);
             }
             break;
 

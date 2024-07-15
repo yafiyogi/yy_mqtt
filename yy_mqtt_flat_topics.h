@@ -139,8 +139,7 @@ class Query final
         l_state = *edge_node;
       };
 
-      [[maybe_unused]]
-      bool add = p_node->find_edge(l_next_state_do, p_label);
+      std::ignore = p_node->find_edge(l_next_state_do, p_label);
 
       return l_state;
     }
@@ -164,8 +163,7 @@ class Query final
         add_state(p_label, *edge_node, p_states_list);
       };
 
-      [[maybe_unused]]
-      bool add = p_node->find_edge(add_state_do, p_label);
+      std::ignore = p_node->find_edge(add_state_do, p_label);
     }
 
     constexpr bool next(const char p_ch,

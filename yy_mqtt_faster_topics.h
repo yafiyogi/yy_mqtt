@@ -115,8 +115,7 @@ class Query final
         p_states_list.emplace_back(state_type{p_topic, *edge_node, p_type});
       };
 
-      [[maybe_unused]]
-      bool add = p_state->find_edge(sub_state_do, p_label);
+      std::ignore = p_state->find_edge(sub_state_do, p_label);
     }
 
     static constexpr void add_wildcards(node_type * p_node,
@@ -195,8 +194,7 @@ class Query final
           case search_type::SingleLevelWild:
           {
             tokenizer topic_tokens{search_topic, mqtt_detail::TopicLevelSeparatorChar};
-            [[maybe_unused]]
-            auto ignore = topic_tokens.scan();
+            std::ignore = topic_tokens.scan();
             if(topic_tokens.empty())
             {
               // Topic is 'abc/+', so add payloads.
