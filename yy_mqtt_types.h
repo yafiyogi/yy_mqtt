@@ -32,6 +32,7 @@
 
 namespace yafiyogi::yy_mqtt {
 
-using TopicLevels = yy_quad::simple_vector<std::string_view, yy_quad::ClearAction::Keep>;
+using TopicLevelsView = yy_quad::simple_vector<std::string_view, yy_quad::ClearAction::Keep>;
+using TopicLevels = yy_quad::simple_vector<std::string, yy_quad::ClearAction::Keep>;
 
 } // namespace yafiyogi::yy_mqtt

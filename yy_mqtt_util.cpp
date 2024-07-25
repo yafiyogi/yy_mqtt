@@ -43,8 +43,8 @@ std::string_view topic_trim(const std::string_view p_topic) noexcept
   return yy_util::trim(yy_util::trim(p_topic), mqtt_detail::TopicLevelSeparator);
 }
 
-TopicLevels & topic_tokenize(TopicLevels & p_levels,
-                           const std::string_view p_topic) noexcept
+TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
+                                      const std::string_view p_topic) noexcept
 {
   yy_util::tokenizer<std::string_view::value_type> tokenizer{yy_quad::make_const_span(p_topic),
                                                              mqtt_detail::TopicLevelSeparatorChar};
@@ -59,6 +59,31 @@ TopicLevels & topic_tokenize(TopicLevels & p_levels,
   return p_levels;
 }
 
+TopicLevelsView topic_tokenize_view(const std::string_view p_topic) noexcept
+{
+  TopicLevelsView levels;
+
+  topic_tokenize_view(levels, p_topic);
+
+  return levels;
+}
+
+TopicLevels & topic_tokenize(TopicLevels & p_levels,
+                           const std::string_view p_topic) noexcept
+{
+  yy_util::tokenizer<std::string_view::value_type> tokenizer{yy_quad::make_const_span(p_topic),
+                                                             mqtt_detail::TopicLevelSeparatorChar};
+  p_levels.clear();
+
+  while(!tokenizer.empty())
+  {
+    auto level = tokenizer.scan();
+    p_levels.emplace_back(std::string{level.begin(), level.end()});
+  }
+
+  return p_levels;
+}
+
 TopicLevels topic_tokenize(const std::string_view p_topic) noexcept
 {
   TopicLevels levels;
@@ -68,7 +93,7 @@ TopicLevels topic_tokenize(const std::string_view p_topic) noexcept
   return levels;
 }
 
-bool topic_validate(const TopicLevels & p_levels,
+bool topic_validate(const TopicLevelsView & p_levels,
                     const TopicType p_type)
 {
   switch(p_type)
@@ -115,11 +140,11 @@ bool topic_validate(const TopicLevels & p_levels,
 bool topic_validate(const std::string_view p_topic,
                     const TopicType p_type)
 {
-  return topic_validate(topic_tokenize(p_topic), p_type);
+  return topic_validate(topic_tokenize_view(p_topic), p_type);
 }
 
-bool topic_match(const TopicLevels & p_filter,
-                 const TopicLevels & p_topic) noexcept
+bool topic_match(const TopicLevelsView & p_filter,
+                 const TopicLevelsView & p_topic) noexcept
 {
   std::size_t filter_level_no = 0;
   const std::size_t max_topic_level = p_topic.size();
@@ -168,7 +193,7 @@ bool topic_match(const TopicLevels & p_filter,
 bool topic_match(const std::string_view & p_filter,
                  const std::string_view & p_topic) noexcept
 {
-  return topic_match(topic_tokenize(p_filter), topic_tokenize(p_topic));
+  return topic_match(topic_tokenize_view(p_filter), topic_tokenize_view(p_topic));
 }
 
 } // namespace yafiyogi::yy_mqtt
