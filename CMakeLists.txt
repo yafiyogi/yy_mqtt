@@ -58,9 +58,6 @@ target_sources(yy_mqtt
       yy_mqtt_types.h
       yy_mqtt_util.h)
 
-add_subdirectory(unit_tests)
-add_subdirectory(benchmarks)
-
 install(TARGETS yy_mqtt
   EXPORT yy_mqttTargets
   FILE_SET HEADERS DESTINATION include/yy_mqtt)
@@ -78,8 +75,7 @@ write_basic_package_version_file("yy_mqttConfigVersion.cmake"
 install(FILES "yy_mqttConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/yy_mqttConfigVersion.cmake"
     DESTINATION lib/cmake/yy_mqtt)
 
-get_target_property(YY_MQTT_HEADERS yy_mqtt HEADER_SET)
-get_target_property(YY_MQTT_SOURCES yy_mqtt SOURCES)
+add_subdirectory(unit_tests)
+add_subdirectory(benchmarks)
 
-add_custom_target(tidy-all
- COMMAND rm -f clang-tidy.log \; for f in "$$(" echo \"${YY_MQTT_HEADERS} ${YY_MQTT_SOURCES}\" | sed -n -e 's/;/ /pg' ")" \; do ${YY_CLANG_TIDY_CMD} ${YY_CLANG_TIDY_OPTIONS} "$$f" -- ${YY_TIDY_COMPILER_OPTIONS} >> clang-tidy.log \; done)
+add_yy_tidy_all(yy_mqtt)
