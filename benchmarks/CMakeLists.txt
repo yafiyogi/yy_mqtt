@@ -2,8 +2,13 @@ cmake_minimum_required(VERSION 3.24)
 
 project(benchmark_yy_mqtt LANGUAGES CXX)
 
-add_executable(benchmark_yy_mqtt
+find_package(Boost 1.84.0 REQUIRED COMPONENTS locale)
+find_package(fmt REQUIRED)
+find_package(benchmark REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(yy_cpp REQUIRED)
 
+add_executable(benchmark_yy_mqtt
   bench_topics.cpp
   bench_flat_topics.cpp
   bench_fast_topics.cpp
@@ -20,11 +25,6 @@ target_include_directories(benchmark_yy_mqtt
     "${CMAKE_INSTALL_PREFIX}/include"
     "${PROJECT_SOURCE_DIR}/.." )
 
-find_package(Boost 1.84.0 REQUIRED COMPONENTS locale)
-find_package(fmt REQUIRED)
-find_package(benchmark REQUIRED)
-find_package(spdlog REQUIRED)
-
 target_compile_options(yy_mqtt
   PRIVATE
   "-DSPDLOG_COMPILED_LIB"
@@ -32,12 +32,11 @@ target_compile_options(yy_mqtt
 
 target_link_directories(benchmark_yy_mqtt
   PRIVATE
-  "${CMAKE_INSTALL_PREFIX}/lib"
   "${YY_THIRD_PARTY_LIBRARY}/lib"
   /opt/local/lib )
 
 target_link_libraries(benchmark_yy_mqtt
-  yy_cpp
+  yy_cpp::yy_cpp
   yy_mqtt
   benchmark::benchmark
   Boost::locale

@@ -29,7 +29,7 @@
 
 cmake_minimum_required(VERSION 3.24)
 
-project(yy_mqtt LANGUAGES CXX)
+project(yy_mqtt LANGUAGES CXX VERSION 0.0.1)
 
 set(YY_ROOT "${PROJECT_SOURCE_DIR}/..")
 set(YY_CMAKE "${YY_ROOT}/yy_cmake")
@@ -49,20 +49,36 @@ target_include_directories(yy_mqtt
     "${YY_THIRD_PARTY_LIBRARY}/include" )
 
 target_sources(yy_mqtt
-  PRIVATE yy_mqtt_util.cpp )
-
-set(YY_MQTT_HEADERS
-  "yy_mqtt_constants.h"
-  "yy_mqtt_faster_topics.h"
-  "yy_mqtt_types.h"
-  "yy_mqtt_util.h" )
+  PRIVATE
+    yy_mqtt_util.cpp
+  PUBLIC FILE_SET HEADERS
+    FILES
+      yy_mqtt_constants.h
+      yy_mqtt_faster_topics.h
+      yy_mqtt_types.h
+      yy_mqtt_util.h)
 
 add_subdirectory(unit_tests)
 add_subdirectory(benchmarks)
 
-install(TARGETS yy_mqtt )
-install(FILES ${YY_MQTT_HEADERS} DESTINATION include/yy_mqtt)
+install(TARGETS yy_mqtt
+  EXPORT yy_mqttTargets
+  FILE_SET HEADERS DESTINATION include/yy_mqtt)
 
+install(EXPORT yy_mqttTargets
+  FILE yy_mqttTargets.cmake
+  NAMESPACE yy_mqtt::
+  DESTINATION lib/cmake/yy_mqtt)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file("yy_mqttConfigVersion.cmake"
+  VERSION ${yy_mqtt_VERSION}
+  COMPATIBILITY AnyNewerVersion)
+
+install(FILES "yy_mqttConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/yy_mqttConfigVersion.cmake"
+    DESTINATION lib/cmake/yy_mqtt)
+
+get_target_property(YY_MQTT_HEADERS yy_mqtt HEADER_SET)
 get_target_property(YY_MQTT_SOURCES yy_mqtt SOURCES)
 
 add_custom_target(tidy-all
