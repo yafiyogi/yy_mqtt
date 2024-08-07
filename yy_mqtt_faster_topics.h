@@ -75,7 +75,7 @@ class Query final
       m_nodes(std::move(p_nodes)),
       m_data(std::move(p_data))
     {
-      m_search_states.reserve(6);
+      m_search_states.reserve(8);
       m_payloads.reserve(3);
     }
 
@@ -145,10 +145,8 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      {
-        m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Literal});
-        add_wildcards(m_nodes.begin(), p_topic, m_search_states);
-      }
+      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Literal});
+      add_wildcards(m_nodes.begin(), p_topic, m_search_states);
 
       while(!m_search_states.empty())
       {
@@ -181,12 +179,10 @@ class Query final
               add_wildcards(state, topic_tokens.source(), m_search_states);
             }
 
-            if(found && topic_tokens.empty())
+            if(found)
             {
               // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
               add_payload(state, m_payloads);
-
-              add_wildcards(state, topic_tokens.source(), m_search_states);
             }
             break;
           }
@@ -195,30 +191,21 @@ class Query final
           {
             tokenizer topic_tokens{search_topic, mqtt_detail::TopicLevelSeparatorChar};
             std::ignore = topic_tokens.scan();
-            if(topic_tokens.empty())
+
+            auto topic{topic_tokens.source()};
+            if(topic.empty())
             {
               // Topic is 'abc/+', so add payloads.
               add_payload(state, m_payloads);
-
-              // Try to match 'abc/+/+' and 'abc/+/#'
-              add_wildcards(state, topic_type{}, m_search_states);
             }
             else
             {
-              auto topic = topic_tokens.source();
-              // Topic is 'abc/+/...' so ...
-              // ... try to match 'abc/+/cde
-              if(!topic.empty())
-              {
-                m_search_states.emplace_back(state_type{topic, state, search_type::Literal});
-              }
-              else
-              {
-                add_payload(state, m_payloads);
-              }
-              // ... try to match 'abc/+/+' and 'abc/+/#'
-              add_wildcards(state, topic, m_search_states);
+              // Try to match 'abc/+/cde
+              m_search_states.emplace_back(state_type{topic, state, search_type::Literal});
             }
+
+            // Try to match 'abc/+/+' and 'abc/+/#'
+            add_wildcards(state, topic, m_search_states);
             break;
           }
 
@@ -229,10 +216,10 @@ class Query final
       }
     }
 
-    trie_vector m_nodes;
-    data_vector m_data;
-    queue m_search_states;
-    payloads_type m_payloads;
+    trie_vector m_nodes{};
+    data_vector m_data{};
+    queue m_search_states{};
+    payloads_type m_payloads{};
 };
 
 } // namespace faster_topics_detail
