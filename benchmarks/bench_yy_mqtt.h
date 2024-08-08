@@ -34,12 +34,14 @@
 #include "yy_mqtt_flat_topics.h"
 #include "yy_mqtt_fast_topics.h"
 #include "yy_mqtt_faster_topics.h"
+#include "yy_mqtt_state_topics.h"
 
 
 using Topics = yafiyogi::yy_mqtt::topics<int>;
 using FlatTopics = yafiyogi::yy_mqtt::flat_topics<int>;
 using FastTopics = yafiyogi::yy_mqtt::fast_topics<int>;
 using FasterTopics = yafiyogi::yy_mqtt::faster_topics<int>;
+using StateTopics = yafiyogi::yy_mqtt::state_topics<int>;
 
 namespace yafiyogi::benchmark {
 
@@ -58,6 +60,7 @@ struct TopicsFixtureType:
     static FlatTopics m_flat_topics;
     static FastTopics m_fast_topics;
     static FasterTopics m_faster_topics;
+    static StateTopics m_state_topics;
 };
 
 

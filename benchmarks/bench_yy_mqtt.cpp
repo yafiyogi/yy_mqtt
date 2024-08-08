@@ -481,6 +481,7 @@ Topics TopicsFixtureType::m_topics;
 FlatTopics TopicsFixtureType::m_flat_topics;
 FastTopics TopicsFixtureType::m_fast_topics;
 FasterTopics TopicsFixtureType::m_faster_topics;
+StateTopics TopicsFixtureType::m_state_topics;
 
 TopicsFixtureType::TopicsFixtureType()
 {
@@ -513,6 +514,7 @@ void TopicsFixtureType::SetUp(const ::benchmark::State & /* st */)
       }
 
       m_faster_topics.add(topic_levels, count);
+      m_state_topics.add(topic_levels, count);
     }
   }
 }

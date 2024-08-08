@@ -37,6 +37,7 @@ find_package(yy_test REQUIRED)
 add_executable(test_yy_mqtt
   fast_topic_tests.cpp
   faster_topic_tests.cpp
+  state_topic_tests.cpp
   flat_topic_tests.cpp
   topic_tests.cpp
   topic_util_tests.cpp )
