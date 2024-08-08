@@ -132,9 +132,16 @@ class Query final
         }
 
       private:
+        static constexpr void do_nothing(topic_type /* p_topic */,
+                                         node_ptr /* p_state */,
+                                         queue & /* p_search_states */,
+                                         payloads_type & /* p_payloads */) noexcept
+        {
+        }
+
         topic_type m_topic{};
         node_ptr m_state{};
-        find_fn m_find = find_literal;
+        find_fn m_find = do_nothing;
     };
 
     static constexpr void add_sub_state(const std::string_view p_label,
