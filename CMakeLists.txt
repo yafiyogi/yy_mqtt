@@ -54,7 +54,7 @@ target_sources(yy_mqtt
   PUBLIC FILE_SET HEADERS
     FILES
       yy_mqtt_constants.h
-      yy_mqtt_faster_topics.h
+      yy_mqtt_state_topics.h
       yy_mqtt_types.h
       yy_mqtt_util.h)
 
