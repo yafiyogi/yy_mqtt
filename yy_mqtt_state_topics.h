@@ -103,14 +103,14 @@ class Query final
     using find_fn = void (*)(topic_type /* p_topic */,
                              node_ptr /* p_state */,
                              queue & /* p_search_states */,
-                             payloads_type & /* p_payloads */);
+                             payloads_type & /* p_payloads */) noexcept;
 
     class state_type
     {
       public:
         constexpr state_type(topic_type p_topic,
                              node_ptr p_state,
-                             find_fn p_find):
+                             find_fn p_find) noexcept:
           m_topic(p_topic),
           m_state(p_state),
           m_find(p_find)
