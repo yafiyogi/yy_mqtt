@@ -115,6 +115,7 @@ class Query final
           m_state(p_state),
           m_find(p_find)
         {
+          YY_ASSERT(p_find);
         }
 
         constexpr state_type() noexcept = default;
@@ -132,16 +133,9 @@ class Query final
         }
 
       private:
-        static constexpr void do_nothing(topic_type /* p_topic */,
-                                         node_ptr /* p_state */,
-                                         queue & /* p_search_states */,
-                                         payloads_type & /* p_payloads */) noexcept
-        {
-        }
-
         topic_type m_topic{};
         node_ptr m_state{};
-        find_fn m_find = do_nothing;
+        find_fn m_find = null_find;
     };
 
     static constexpr void add_sub_state(const std::string_view p_label,
@@ -162,8 +156,8 @@ class Query final
                                         node_ptr p_state,
                                         queue & p_search_states) noexcept
     {
-      add_sub_state(mqtt_detail::TopicSingleLevelWildcard, p_topic, p_state, find_single_level, p_search_states);
-      add_sub_state(mqtt_detail::TopicMultiLevelWildcard, p_topic, p_state, find_multi_level, p_search_states);
+      add_sub_state(mqtt_detail::TopicSingleLevelWildcard, p_topic, p_state, single_level_find, p_search_states);
+      add_sub_state(mqtt_detail::TopicMultiLevelWildcard, p_topic, p_state, multi_level_find, p_search_states);
     }
 
     static constexpr void add_payload(node_ptr p_state,
@@ -175,7 +169,14 @@ class Query final
       }
     }
 
-    static constexpr void find_literal(topic_type p_topic,
+    static constexpr void null_find(topic_type /* p_topic */,
+                                    node_ptr /* p_state */,
+                                    queue & /* p_search_states */,
+                                    payloads_type & /* p_payloads */) noexcept
+    {
+    }
+
+    static constexpr void literal_find(topic_type p_topic,
                                        node_ptr p_state,
                                        queue & p_search_states,
                                        payloads_type & p_payloads) noexcept
@@ -186,30 +187,22 @@ class Query final
 
       tokenizer topic_tokens{p_topic, mqtt_detail::TopicLevelSeparatorChar};
 
-      bool found = false;
       while(!topic_tokens.empty())
       {
-        const auto level = topic_tokens.scan();
-
-        found = p_state->find_edge(next_state_do, level);
-
-        if(!found)
+        if(auto level{topic_tokens.scan()};
+           !p_state->find_edge(next_state_do, level))
         {
-          break;
+          return;
         }
-
         // Topic is 'abc/cde/', try to match 'abc/cde/+' & 'abc/cde/#'
         add_wildcards(topic_tokens.source(), p_state, p_search_states);
       }
 
-      if(found)
-      {
-        // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
-        add_payload(p_state, p_payloads);
-      }
+      // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
+      add_payload(p_state, p_payloads);
     }
 
-    static constexpr void find_single_level(topic_type p_topic,
+    static constexpr void single_level_find(topic_type p_topic,
                                             node_ptr p_state,
                                             queue & p_search_states,
                                             payloads_type & p_payloads) noexcept
@@ -226,14 +219,14 @@ class Query final
       else
       {
         // Try to match 'abc/+/cde
-        p_search_states.emplace_back(state_type{rest_topic, p_state, find_literal});
+        p_search_states.emplace_back(state_type{rest_topic, p_state, literal_find});
       }
 
       // Try to match 'abc/+/+' and 'abc/+/#'
       add_wildcards(rest_topic, p_state, p_search_states);
     }
 
-    static constexpr void find_multi_level(topic_type /* p_topic */,
+    static constexpr void multi_level_find(topic_type /* p_topic */,
                                            node_ptr p_state,
                                            queue & /* p_search_states */,
                                            payloads_type & p_payloads) noexcept
@@ -243,7 +236,7 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), find_literal});
+      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), literal_find});
       add_wildcards(p_topic, m_nodes.begin(), m_search_states);
 
       while(!m_search_states.empty())
