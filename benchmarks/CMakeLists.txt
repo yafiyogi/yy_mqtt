@@ -14,6 +14,7 @@ add_executable(benchmark_yy_mqtt
   bench_fast_topics.cpp
   bench_faster_topics.cpp
   bench_state_topics.cpp
+  bench_variant_state_topics.cpp
 
   bench_yy_mqtt.cpp )
 
