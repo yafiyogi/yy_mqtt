@@ -78,7 +78,6 @@ class Query final
     constexpr Query() noexcept = default;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
-    constexpr ~Query() = default;
 
     Query & operator=(const Query &) = delete;
     constexpr Query & operator=(Query &&) noexcept = default;
@@ -119,11 +118,10 @@ class Query final
         }
 
         constexpr state_type() noexcept = default;
-        constexpr state_type(const state_type &) noexcept = default;
+        constexpr state_type(const state_type &) noexcept = delete;
         constexpr state_type(state_type && ) noexcept = default;
-        constexpr ~state_type() noexcept = default;
 
-        constexpr state_type & operator=(const state_type &) noexcept = default;
+        constexpr state_type & operator=(const state_type &) noexcept = delete;
         constexpr state_type & operator=(state_type &&) noexcept = default;
 
         constexpr void operator()(queue & p_search_states,

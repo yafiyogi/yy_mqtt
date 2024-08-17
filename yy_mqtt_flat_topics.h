@@ -79,7 +79,6 @@ class Query final
     Query() = delete;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
-    constexpr ~Query() = default;
 
     Query & operator=(const Query &) = delete;
     constexpr Query & operator=(Query &&) noexcept = default;
