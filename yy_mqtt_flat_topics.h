@@ -149,7 +149,7 @@ class Query final
     {
       YY_ASSERT(p_state);
 
-      p_states_list.emplace_back(std::make_tuple(p_state, label));
+      p_states_list.emplace_back(p_state, label);
     }
 
     static constexpr void add_node_state(const label_type p_label,

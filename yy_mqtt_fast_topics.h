@@ -106,7 +106,7 @@ class Query final
 
       auto sub_state_do = [p_topic, p_type, &p_states_list]
                           (node_type ** edge_node, size_type /* pos */) {
-        p_states_list.emplace_back(state_type{p_topic, *edge_node, p_type});
+        p_states_list.emplace_back(p_topic, *edge_node, p_type);
       };
 
       std::ignore = p_state->find_edge(sub_state_do, p_label);
@@ -139,7 +139,7 @@ class Query final
         add_wildcards(*separator_node, topic_type{}, m_search_states);
       };
 
-      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), search_type::Literal});
+      m_search_states.emplace_back(p_topic, m_nodes.begin(), search_type::Literal);
       add_wildcards(m_nodes.begin(), p_topic, m_search_states);
 
       while(!m_search_states.empty())
@@ -226,7 +226,7 @@ class Query final
                 // ... try to match 'abc/+/cde
                 if(!search_topic.empty())
                 {
-                  m_search_states.emplace_back(state_type{search_topic, separator_state, search_type::Literal});
+                  m_search_states.emplace_back(search_topic, separator_state, search_type::Literal);
                 }
                 else
                 {

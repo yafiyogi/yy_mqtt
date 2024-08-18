@@ -144,7 +144,7 @@ class Query final
     {
       auto sub_state_do = [p_topic, p_find, &p_search_states]
                           (node_ptr * edge_node, size_type /* pos */) {
-        p_search_states.emplace_back(state_type{p_topic, *edge_node, p_find});
+        p_search_states.emplace_back(p_topic, *edge_node, p_find);
       };
 
       std::ignore = p_state->find_edge(sub_state_do, p_label);
@@ -217,7 +217,7 @@ class Query final
       else
       {
         // Try to match 'abc/+/cde
-        p_search_states.emplace_back(state_type{rest_topic, p_state, literal_find});
+        p_search_states.emplace_back(rest_topic, p_state, literal_find);
       }
 
       // Try to match 'abc/+/+' and 'abc/+/#'
@@ -234,7 +234,7 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(state_type{p_topic, m_nodes.begin(), literal_find});
+      m_search_states.emplace_back(p_topic, m_nodes.begin(), literal_find);
       add_wildcards(p_topic, m_nodes.begin(), m_search_states);
 
       while(!m_search_states.empty())
@@ -271,7 +271,7 @@ constexpr auto state_topics_add(state_topics<ValueType> & topics,
   while(!tokenizer.empty())
   {
     auto token = tokenizer.scan();
-    topic_levels.emplace_back(std::string{token.begin(), token.end()});
+    topic_levels.emplace_back(token.begin(), token.end());
   }
 
   return topics.add(topic_levels, value);

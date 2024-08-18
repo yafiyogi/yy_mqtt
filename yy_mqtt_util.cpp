@@ -53,7 +53,7 @@ TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
   while(!tokenizer.empty())
   {
     auto level = tokenizer.scan();
-    p_levels.emplace_back(std::string_view{level.begin(), level.end()});
+    p_levels.emplace_back(level.begin(), level.end());
   }
 
   return p_levels;
@@ -78,7 +78,7 @@ TopicLevels & topic_tokenize(TopicLevels & p_levels,
   while(!tokenizer.empty())
   {
     auto level = tokenizer.scan();
-    p_levels.emplace_back(std::string{level.begin(), level.end()});
+    p_levels.emplace_back(level.begin(), level.end());
   }
 
   return p_levels;
