@@ -41,7 +41,8 @@ namespace yafiyogi::yy_mqtt {
 namespace fast_topics_detail {
 
 template<typename LabelType,
-         typename ValueType>
+         typename ValueType,
+         typename TokenizerType>
 class Query final
 {
   public:

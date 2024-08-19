@@ -35,7 +35,6 @@
 #include "yy_cpp/yy_fm_flat_trie_ptr.h"
 #include "yy_cpp/yy_ref_traits.h"
 #include "yy_cpp/yy_span.h"
-#include "yy_cpp/yy_tokenizer.h"
 #include "yy_cpp/yy_vector.h"
 
 #include "yy_mqtt_constants.h"
@@ -44,7 +43,8 @@ namespace yafiyogi::yy_mqtt {
 namespace faster_topics_detail {
 
 template<typename LabelType,
-         typename ValueType>
+         typename ValueType,
+         typename TokenizerType>
 class Query final
 {
   public:
@@ -60,7 +60,7 @@ class Query final
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
     enum class search_type:uint8_t {Literal, SingleLevelWild, MultiLevelWild};
-    using tokenizer = yy_util::tokenizer<std::string_view::value_type>;
+    using tokenizer_type = TokenizerType;
 
     struct state_type
     {
@@ -160,7 +160,7 @@ class Query final
               state = *edge_node;
             };
 
-            tokenizer topic_tokens{search_topic, mqtt_detail::TopicLevelSeparatorChar};
+            tokenizer_type topic_tokens{search_topic};
 
             bool found = false;
             while(!topic_tokens.empty())
@@ -188,7 +188,7 @@ class Query final
 
           case search_type::SingleLevelWild:
           {
-            tokenizer topic_tokens{search_topic, mqtt_detail::TopicLevelSeparatorChar};
+            tokenizer_type topic_tokens{search_topic};
             std::ignore = topic_tokens.scan();
 
             auto topic{topic_tokens.source()};
@@ -221,28 +221,16 @@ class Query final
     payloads_type m_payloads{};
 };
 
+template<typename LabelType>
+using tokenizer_type = yy_data::fm_flat_trie_ptr_detail::label_word_tokenizer<LabelType,
+                                                                              mqtt_detail::TopicLevelSeparatorChar>;
+
 } // namespace faster_topics_detail
 
 template<typename ValueType>
 using faster_topics = yy_data::fm_flat_trie_ptr<std::string,
                                                 ValueType,
-                                                faster_topics_detail::Query>;
-template<typename ValueType>
-constexpr auto faster_topics_add(faster_topics<ValueType> & topics,
-                                 std::string_view topic,
-                                 const ValueType & value)
-{
-  yy_quad::simple_vector<std::string> topic_levels;
-  yy_util::tokenizer<std::string::value_type> tokenizer{yy_quad::make_const_span(topic),
-                                                        mqtt_detail::TopicLevelSeparatorChar};
-
-  while(!tokenizer.empty())
-  {
-    auto token = tokenizer.scan();
-    topic_levels.emplace_back(token.begin(), token.end());
-  }
-
-  return topics.add(topic_levels, value);
-}
+                                                faster_topics_detail::Query,
+                                                faster_topics_detail::tokenizer_type>;
 
 } // namespace yafiyogi::yy_mqtt

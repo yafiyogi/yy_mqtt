@@ -503,20 +503,9 @@ void TopicsFixtureType::SetUp(const ::benchmark::State & /* st */)
       m_topics.add(topic, count);
       m_flat_topics.add(topic, count);
       m_fast_topics.add(topic, count);
-
-      yy_quad::simple_vector<std::string> topic_levels;
-      yy_util::tokenizer<std::string::value_type> tokenizer{yy_quad::make_const_span(topic),
-                                                            yy_mqtt::mqtt_detail::TopicLevelSeparatorChar};
-
-      while(!tokenizer.empty())
-      {
-        auto token = tokenizer.scan();
-        topic_levels.emplace_back(std::string{token.begin(), token.end()});
-      }
-
-      m_faster_topics.add(topic_levels, count);
-      m_state_topics.add(topic_levels, count);
-      m_variant_state_topics.add(topic_levels, count);
+      m_faster_topics.add(topic, count);
+      m_state_topics.add(topic, count);
+      m_variant_state_topics.add(topic, count);
     }
   }
 }

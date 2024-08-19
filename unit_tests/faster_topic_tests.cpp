@@ -40,7 +40,7 @@ class TestFasterTopics:
 {
   public:
     using faster_topics = yafiyogi::yy_mqtt::faster_topics<int>;
-    using Automaton = faster_topics::automaton;
+    using Automaton = faster_topics::automaton_type;
     using Values = std::vector<Automaton::value_type>;
 
     void SetUp() override
@@ -61,7 +61,8 @@ class TestFasterTopics:
       {
         auto [topic, value] = filter;
 
-        faster_topics_add(l_topics, topic, value);
+        //faster_topics_add(l_topics, topic, value);
+        l_topics.add(topic, value);
       }
 
       auto count = p_values.size();

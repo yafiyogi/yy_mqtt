@@ -51,7 +51,8 @@ struct flat_topics_traits
 };
 
 template<typename LabelType,
-         typename ValueType>
+         typename ValueType,
+         typename TokenizerType>
 class Query final
 {
   public:

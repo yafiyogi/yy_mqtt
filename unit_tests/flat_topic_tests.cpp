@@ -38,7 +38,7 @@ class TestFlatTopics:
 {
   public:
     using flat_topics = yafiyogi::yy_mqtt::flat_topics<int>;
-    using Automaton = flat_topics::automaton;
+    using Automaton = flat_topics::automaton_type;
     using Values = std::vector<Automaton::value_type>;
 
     void SetUp() override

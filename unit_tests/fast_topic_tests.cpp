@@ -38,7 +38,7 @@ class TestFastTopics:
 {
   public:
     using fast_topics = yafiyogi::yy_mqtt::fast_topics<int>;
-    using Automaton = fast_topics::automaton;
+    using Automaton = fast_topics::automaton_type;
     using Values = std::vector<Automaton::value_type>;
 
     void SetUp() override

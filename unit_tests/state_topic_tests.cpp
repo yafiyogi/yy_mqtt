@@ -40,7 +40,7 @@ class TestStateTopics:
 {
   public:
     using state_topics = yafiyogi::yy_mqtt::state_topics<int>;
-    using Automaton = state_topics::automaton;
+    using Automaton = state_topics::automaton_type;
     using Values = std::vector<Automaton::value_type>;
 
     void SetUp() override
@@ -61,7 +61,7 @@ class TestStateTopics:
       {
         auto [topic, value] = filter;
 
-        state_topics_add(l_topics, topic, value);
+        l_topics.add(topic, value);
       }
 
       auto count = p_values.size();
