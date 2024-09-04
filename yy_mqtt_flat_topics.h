@@ -37,32 +37,18 @@
 namespace yafiyogi::yy_mqtt {
 namespace flat_topics_detail {
 
-template<typename LabelType,
-         typename ValueType>
-struct flat_topics_traits
-{
-    using traits = yy_data::fm_flat_trie_ptr_detail::trie_ptr_traits<LabelType, ValueType>;
-    using label_type = typename traits::label_type;
-    using node_type = typename traits::node_type;
-    using value_type = typename traits::value_type;
-    using size_type = typename traits::size_type;
-    using trie_vector = typename traits::trie_vector;
-    using data_vector = typename traits::data_vector;
-};
-
-template<typename LabelType,
-         typename ValueType,
-         typename TokenizerType>
+template<typename TrieTraits>
 class Query final
 {
   public:
-    using traits = flat_topics_traits<LabelType, ValueType>;
+    using traits = TrieTraits;
     using label_type = typename traits::label_type;
-    using node_type = typename traits::node_type;
+    using node_type = typename traits::ptr_node_type;
     using value_type = typename traits::value_type;
     using size_type = typename traits::size_type;
-    using trie_vector = typename traits::trie_vector;
+    using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
+
     using queue = yy_quad::vector<std::tuple<node_type *, label_type>>;
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
@@ -74,12 +60,12 @@ class Query final
     {
       m_search_states.reserve(6);
       m_payloads.reserve(3);
-
     }
 
     Query() = delete;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
+    constexpr ~Query() noexcept = default;
 
     Query & operator=(const Query &) = delete;
     constexpr Query & operator=(Query &&) noexcept = default;
@@ -290,7 +276,7 @@ class Query final
 
 template<typename ValueType>
 using flat_topics = yy_data::fm_flat_trie_ptr<char,
-                                          ValueType,
-                                          flat_topics_detail::Query>;
+                                              ValueType,
+                                              flat_topics_detail::Query>;
 
 } // namespace yafiyogi::yy_mqtt

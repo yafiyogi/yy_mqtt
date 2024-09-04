@@ -40,18 +40,16 @@
 namespace yafiyogi::yy_mqtt {
 namespace fast_topics_detail {
 
-template<typename LabelType,
-         typename ValueType,
-         typename TokenizerType>
+template<typename TrieTraits>
 class Query final
 {
   public:
-    using traits = yy_data::fm_flat_trie_ptr_detail::trie_ptr_traits<LabelType, ValueType>;
+    using traits = TrieTraits;
     using label_type = typename traits::label_type;
-    using node_type = typename traits::node_type;
+    using node_type = typename traits::ptr_node_type;
     using value_type = typename traits::value_type;
     using size_type = typename traits::size_type;
-    using trie_vector = typename traits::trie_vector;
+    using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
     using topic_type = yy_quad::const_span<label_type>;
     using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
@@ -78,6 +76,7 @@ class Query final
     constexpr Query() noexcept = default;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
+    constexpr ~Query() noexcept = default;
 
     Query & operator=(const Query &) = delete;
     constexpr Query & operator=(Query &&) noexcept = default;

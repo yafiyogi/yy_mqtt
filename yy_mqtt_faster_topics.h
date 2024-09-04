@@ -35,6 +35,7 @@
 #include "yy_cpp/yy_fm_flat_trie_ptr.h"
 #include "yy_cpp/yy_ref_traits.h"
 #include "yy_cpp/yy_span.h"
+#include "yy_cpp/yy_tokenizer.h"
 #include "yy_cpp/yy_vector.h"
 
 #include "yy_mqtt_constants.h"
@@ -42,25 +43,22 @@
 namespace yafiyogi::yy_mqtt {
 namespace faster_topics_detail {
 
-template<typename LabelType,
-         typename ValueType,
-         typename TokenizerType>
+template<typename TrieTraits>
 class Query final
 {
   public:
-    using traits = yy_data::fm_flat_trie_ptr_detail::trie_ptr_traits<LabelType, ValueType>;
+    using traits = TrieTraits;
     using label_type = typename traits::label_type;
-    using node_type = typename traits::node_type;
+    using node_type = typename traits::ptr_node_type;
     using value_type = typename traits::value_type;
     using size_type = typename traits::size_type;
-    using trie_vector = typename traits::trie_vector;
+    using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
     using topic_type = yy_quad::const_span<std::string_view::value_type>;
-    using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
     enum class search_type:uint8_t {Literal, SingleLevelWild, MultiLevelWild};
-    using tokenizer_type = TokenizerType;
+    using tokenizer_type = typename traits::tokenizer_type;
 
     struct state_type
     {
@@ -82,6 +80,7 @@ class Query final
     constexpr Query() noexcept = default;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
+    constexpr ~Query() noexcept = default;
 
     Query & operator=(const Query &) = delete;
     constexpr Query & operator=(Query &&) noexcept = default;
@@ -101,7 +100,7 @@ class Query final
     }
 
   private:
-    static constexpr void add_sub_state(const std::string_view p_label,
+    static constexpr void add_sub_state(const topic_type p_label,
                                         topic_type p_topic,
                                         search_type p_type,
                                         node_type * p_state,
@@ -117,14 +116,17 @@ class Query final
       std::ignore = p_state->find_edge(sub_state_do, p_label);
     }
 
+    static constexpr auto single_leve_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
+    static constexpr auto multi_leve_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
+
     static constexpr void add_wildcards(node_type * p_node,
                                         topic_type p_topic,
                                         queue & p_states_list) noexcept
     {
       YY_ASSERT(p_node);
 
-      add_sub_state(mqtt_detail::TopicSingleLevelWildcard, p_topic, search_type::SingleLevelWild, p_node, p_states_list);
-      add_sub_state(mqtt_detail::TopicMultiLevelWildcard, p_topic, search_type::MultiLevelWild, p_node, p_states_list);
+      add_sub_state(single_leve_wildcard, p_topic, search_type::SingleLevelWild, p_node, p_states_list);
+      add_sub_state(multi_leve_wildcard, p_topic, search_type::MultiLevelWild, p_node, p_states_list);
     }
 
     static constexpr bool add_payload(node_type * p_node,
@@ -165,7 +167,7 @@ class Query final
             bool found = false;
             while(!topic_tokens.empty())
             {
-              const auto level = topic_tokens.scan();
+              const auto level{topic_tokens.scan()};
 
               found = state->find_edge(next_state_do, level);
 
@@ -222,9 +224,9 @@ class Query final
 };
 
 template<typename LabelType>
-using tokenizer_type = yy_data::fm_flat_trie_ptr_detail::label_word_tokenizer<LabelType,
-                                                                              mqtt_detail::TopicLevelSeparatorChar>;
-
+using tokenizer_type = yy_trie::label_word_tokenizer<LabelType,
+                                                     mqtt_detail::TopicLevelSeparatorChar,
+                                                     yy_util::tokenizer>;
 } // namespace faster_topics_detail
 
 template<typename ValueType>

@@ -35,6 +35,7 @@
 #include "yy_cpp/yy_fm_flat_trie_ptr.h"
 #include "yy_cpp/yy_ref_traits.h"
 #include "yy_cpp/yy_span.h"
+#include "yy_cpp/yy_tokenizer.h"
 #include "yy_cpp/yy_vector.h"
 
 #include "yy_mqtt_constants.h"
@@ -42,29 +43,23 @@
 namespace yafiyogi::yy_mqtt {
 namespace state_topics_detail {
 
-template<typename LabelType,
-         typename ValueType,
-         typename TokenizerType>
+template<typename TrieTraits>
 class Query final
 {
   public:
-    using traits = yy_data::fm_flat_trie_ptr_detail::trie_ptr_traits<LabelType, ValueType>;
+    using traits = TrieTraits;
     using label_type = typename traits::label_type;
-    using node_type = typename traits::node_type;
-    using node_ptr = typename traits::node_ptr;
-    using const_node_ptr = typename traits::const_node_ptr;
+    using node_type = typename traits::ptr_node_type;
+    using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
     using value_ptr = typename traits::value_ptr;
-    using const_value_ptr = typename traits::const_value_ptr;
     using size_type = typename traits::size_type;
-    using trie_vector = typename traits::trie_vector;
+    using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
-    using topic_type = yy_quad::const_span<std::string_view::value_type>;
-    using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
-    using payloads_type = yy_quad::simple_vector<value_type *>;
+    using payloads_type = yy_quad::simple_vector<value_ptr>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
-    enum class search_type:uint8_t {Literal, SingleLevelWild, MultiLevelWild};
-    using tokenizer_type = TokenizerType;
+    using tokenizer_type = typename traits::tokenizer_type;
+    using topic_type = typename tokenizer_type::token_type;
 
     constexpr explicit Query(trie_vector && p_nodes,
                              data_vector && p_data) noexcept:
@@ -78,6 +73,7 @@ class Query final
     constexpr Query() noexcept = default;
     Query(const Query &) = delete;
     constexpr Query(Query &&) noexcept = default;
+    constexpr ~Query() noexcept = default;
 
     Query & operator=(const Query &) = delete;
     constexpr Query & operator=(Query &&) noexcept = default;
@@ -97,7 +93,7 @@ class Query final
     }
 
   private:
-    struct state_type;
+    class state_type;
     using queue = yy_quad::vector<state_type, yy_data::ClearAction::Keep>;
     using find_fn = void (*)(topic_type /* p_topic */,
                              node_ptr /* p_state */,
@@ -118,10 +114,11 @@ class Query final
         }
 
         constexpr state_type() noexcept = default;
-        constexpr state_type(const state_type &) noexcept = delete;
+        constexpr state_type(const state_type &) noexcept = default;
         constexpr state_type(state_type && ) noexcept = default;
+        constexpr ~state_type() noexcept = default;
 
-        constexpr state_type & operator=(const state_type &) noexcept = delete;
+        constexpr state_type & operator=(const state_type &) noexcept = default;
         constexpr state_type & operator=(state_type &&) noexcept = default;
 
         constexpr void operator()(queue & p_search_states,
@@ -136,7 +133,7 @@ class Query final
         find_fn m_find = null_find;
     };
 
-    static constexpr void add_sub_state(const std::string_view p_label,
+    static constexpr void add_sub_state(const topic_type p_label,
                                         topic_type p_topic,
                                         node_ptr p_state,
                                         find_fn p_find,
@@ -150,12 +147,15 @@ class Query final
       std::ignore = p_state->find_edge(sub_state_do, p_label);
     }
 
+    static constexpr const topic_type single_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
+    static constexpr const topic_type multi_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
+
     static constexpr void add_wildcards(topic_type p_topic,
                                         node_ptr p_state,
                                         queue & p_search_states) noexcept
     {
-      add_sub_state(mqtt_detail::TopicSingleLevelWildcard, p_topic, p_state, single_level_find, p_search_states);
-      add_sub_state(mqtt_detail::TopicMultiLevelWildcard, p_topic, p_state, multi_level_find, p_search_states);
+      add_sub_state(single_level_wildcard, p_topic, p_state, &single_level_find, p_search_states);
+      add_sub_state(multi_level_wildcard, p_topic, p_state, &multi_level_find, p_search_states);
     }
 
     static constexpr void add_payload(node_ptr p_state,
@@ -187,7 +187,7 @@ class Query final
 
       while(!topic_tokens.empty())
       {
-        if(auto level{topic_tokens.scan()};
+        if(const auto level{topic_tokens.scan()};
            !p_state->find_edge(next_state_do, level))
         {
           return;
@@ -254,8 +254,11 @@ class Query final
 };
 
 template<typename LabelType>
-using tokenizer_type = yy_data::fm_flat_trie_ptr_detail::label_word_tokenizer<LabelType,
-                                                                              mqtt_detail::TopicLevelSeparatorChar>;
+using tokenizer_type = yy_trie::label_word_tokenizer<LabelType,
+                                                     mqtt_detail::TopicLevelSeparatorChar,
+                                                     yy_util::tokenizer>;
+
+
 } // namespace state_topics_detail
 
 

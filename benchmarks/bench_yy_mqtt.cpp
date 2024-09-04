@@ -503,6 +503,7 @@ void TopicsFixtureType::SetUp(const ::benchmark::State & /* st */)
       m_topics.add(topic, count);
       m_flat_topics.add(topic, count);
       m_fast_topics.add(topic, count);
+
       m_faster_topics.add(topic, count);
       m_state_topics.add(topic, count);
       m_variant_state_topics.add(topic, count);

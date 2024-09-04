@@ -57,11 +57,10 @@ class TestStateTopics:
     {
       state_topics l_topics{};
 
-      for(auto & filter: p_filters)
+      for(auto & filter : p_filters)
       {
         auto [topic, value] = filter;
-
-        l_topics.add(topic, value);
+        l_topics.add(topic, std::move(value));
       }
 
       auto count = p_values.size();
