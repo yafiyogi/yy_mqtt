@@ -50,10 +50,10 @@ TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
                                                              mqtt_detail::TopicLevelSeparatorChar};
   p_levels.clear();
 
-  while(!tokenizer.empty())
+  while(!tokenizer.empty() || tokenizer.has_more())
   {
     auto level = tokenizer.scan();
-    p_levels.emplace_back(level.begin(), level.end());
+    p_levels.emplace_back(std::string_view{level.data(), level.size()});
   }
 
   return p_levels;
@@ -75,7 +75,7 @@ TopicLevels & topic_tokenize(TopicLevels & p_levels,
                                                              mqtt_detail::TopicLevelSeparatorChar};
   p_levels.clear();
 
-  while(!tokenizer.empty())
+  while(!tokenizer.empty() || tokenizer.has_more())
   {
     auto level = tokenizer.scan();
     p_levels.emplace_back(level.begin(), level.end());
