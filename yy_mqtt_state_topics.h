@@ -55,6 +55,7 @@ class Query final
     using value_ptr = typename traits::value_ptr;
     using size_type = typename traits::size_type;
     using trie_vector = typename traits::ptr_trie_vector;
+    using trie_iterator = trie_vector::iterator;
     using data_vector = typename traits::data_vector;
     using payloads_type = yy_quad::simple_vector<value_ptr>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
@@ -234,8 +235,8 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(p_topic, m_nodes.begin(), literal_find);
-      add_wildcards(p_topic, m_nodes.begin(), m_search_states);
+      m_search_states.emplace_back(p_topic, m_nodes.data(), literal_find);
+      add_wildcards(p_topic, m_nodes.data(), m_search_states);
 
       while(!m_search_states.empty())
       {

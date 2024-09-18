@@ -47,9 +47,11 @@ class Query final
     using traits = TrieTraits;
     using label_type = typename traits::label_type;
     using node_type = typename traits::ptr_node_type;
+    using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
     using size_type = typename traits::size_type;
     using trie_vector = typename traits::ptr_trie_vector;
+    using trie_iterator = trie_vector::iterator;
     using data_vector = typename traits::data_vector;
     using topic_type = yy_quad::const_span<label_type>;
     using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
@@ -112,7 +114,7 @@ class Query final
       std::ignore = p_state->find_edge(sub_state_do, p_label);
     }
 
-    static constexpr void add_wildcards(node_type * p_node,
+    static constexpr void add_wildcards(node_ptr p_node,
                                         topic_type topic,
                                         queue & p_states_list) noexcept
     {
@@ -122,7 +124,7 @@ class Query final
       add_sub_state(mqtt_detail::TopicMultiLevelWildcardChar, topic, search_type::MultiLevel, p_node, p_states_list);
     }
 
-    static constexpr void add_payload(node_type * p_node,
+    static constexpr void add_payload(node_ptr p_node,
                                       payloads_type & p_payloads) noexcept
     {
       YY_ASSERT(p_node);
@@ -139,8 +141,8 @@ class Query final
         add_wildcards(*separator_node, topic_type{}, m_search_states);
       };
 
-      m_search_states.emplace_back(p_topic, m_nodes.begin(), search_type::Literal);
-      add_wildcards(m_nodes.begin(), p_topic, m_search_states);
+      m_search_states.emplace_back(p_topic, m_nodes.data(), search_type::Literal);
+      add_wildcards(m_nodes.data(), p_topic, m_search_states);
 
       while(!m_search_states.empty())
       {

@@ -146,8 +146,8 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(p_topic, m_nodes.begin(), search_type::Literal);
-      add_wildcards(m_nodes.begin(), p_topic, m_search_states);
+      m_search_states.emplace_back(p_topic, m_nodes.data(), search_type::Literal);
+      add_wildcards(m_nodes.data(), p_topic, m_search_states);
 
       while(!m_search_states.empty())
       {
