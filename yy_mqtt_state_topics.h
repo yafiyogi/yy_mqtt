@@ -115,8 +115,8 @@ class Query final
         }
 
         constexpr state_type() noexcept = default;
-        constexpr state_type(const state_type &) noexcept = default;
-        constexpr state_type(state_type && ) noexcept = default;
+        state_type(const state_type &) = delete;
+        constexpr state_type(state_type &&) noexcept = default;
         constexpr ~state_type() noexcept = default;
 
         constexpr state_type & operator=(const state_type &) noexcept = default;
@@ -130,13 +130,13 @@ class Query final
 
       private:
         topic_type m_topic{};
-        node_ptr m_state{};
-        find_fn m_find = null_find;
+        node_ptr m_state = nullptr;
+        find_fn m_find = &null_find;
     };
 
     static constexpr void add_sub_state(const topic_type p_label,
                                         topic_type p_topic,
-                                        node_ptr p_state,
+                                        node_ptr p_node,
                                         find_fn p_find,
                                         queue & p_search_states)
     {
@@ -145,26 +145,26 @@ class Query final
         p_search_states.emplace_back(p_topic, *edge_node, p_find);
       };
 
-      std::ignore = p_state->find_edge(sub_state_do, p_label);
+      std::ignore = p_node->find_edge(sub_state_do, p_label);
     }
 
     static constexpr const topic_type single_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
     static constexpr const topic_type multi_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
 
     static constexpr void add_wildcards(topic_type p_topic,
-                                        node_ptr p_state,
+                                        node_ptr p_node,
                                         queue & p_search_states) noexcept
     {
-      add_sub_state(single_level_wildcard, p_topic, p_state, &single_level_find, p_search_states);
-      add_sub_state(multi_level_wildcard, p_topic, p_state, &multi_level_find, p_search_states);
+      add_sub_state(single_level_wildcard, p_topic, p_node, &single_level_find, p_search_states);
+      add_sub_state(multi_level_wildcard, p_topic, p_node, &multi_level_find, p_search_states);
     }
 
-    static constexpr void add_payload(node_ptr p_state,
+    static constexpr void add_payload(node_ptr p_node,
                                       payloads_type & p_payloads) noexcept
     {
-      if(!p_state->empty())
+      if(!p_node->empty())
       {
-        p_payloads.emplace_back(p_state->data());
+        p_payloads.emplace_back(p_node->data());
       }
     }
 

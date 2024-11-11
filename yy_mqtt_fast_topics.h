@@ -61,7 +61,7 @@ class Query final
     struct state_type
     {
         topic_type topic{};
-        node_type * state{};
+        node_type * state = nullptr;
         search_type search = search_type::Literal;
     };
     using queue = yy_quad::vector<state_type>;
