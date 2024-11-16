@@ -37,6 +37,12 @@
 #include "yy_mqtt_util.h"
 
 namespace yafiyogi::yy_mqtt {
+namespace {
+
+using tokenizer_type = yy_util::tokenizer<std::string_view::value_type>;
+using token_type = tokenizer_type::token_type;
+
+}
 
 std::string_view topic_trim(const std::string_view p_topic) noexcept
 {
@@ -46,8 +52,8 @@ std::string_view topic_trim(const std::string_view p_topic) noexcept
 TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
                                       const std::string_view p_topic) noexcept
 {
-  yy_util::tokenizer<std::string_view::value_type> tokenizer{yy_quad::make_const_span(p_topic),
-                                                             mqtt_detail::TopicLevelSeparatorChar};
+  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
+                           mqtt_detail::TopicLevelSeparatorChar};
   p_levels.clear();
 
   while(!tokenizer.empty() || tokenizer.has_more())
@@ -71,8 +77,8 @@ TopicLevelsView topic_tokenize_view(const std::string_view p_topic) noexcept
 TopicLevels & topic_tokenize(TopicLevels & p_levels,
                            const std::string_view p_topic) noexcept
 {
-  yy_util::tokenizer<std::string_view::value_type> tokenizer{yy_quad::make_const_span(p_topic),
-                                                             mqtt_detail::TopicLevelSeparatorChar};
+  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
+                           mqtt_detail::TopicLevelSeparatorChar};
   p_levels.clear();
 
   while(!tokenizer.empty() || tokenizer.has_more())
@@ -93,58 +99,160 @@ TopicLevels topic_tokenize(const std::string_view p_topic) noexcept
   return levels;
 }
 
-bool topic_validate(const TopicLevelsView & p_levels,
-                    const TopicType p_type)
+TopicValidStatus topic_validate_level(token_type p_level,
+                                 const TopicType p_type,
+                                 const bool has_more)
 {
-  switch(p_type)
+  // mqtt-v5.0-os 4.7.1 Topic Wildcards
+  // 2939: The wildcard characters can be used in Topic Filters, but MUST NOT be used within a Topic Name.
+  if((token_type::npos != p_level.find_pos(mqtt_detail::TopicSingleLevelWildcardChar))
+     && ((TopicType::Name == p_type)
+         || (mqtt_detail::TopicSingleLevelWildcard != p_level)))
   {
-    case TopicType::Name:
-    case TopicType::Filter:
-    {
-      const std::size_t max_levels = p_levels.size();
-      std::size_t level_no = 0;
-
-      for(const auto & level : p_levels)
-      {
-        ++level_no;
-
-        // mqtt-v5.0-os 4.7.1 Topic Wildcards
-        // 2939: The wildcard characters can be used in Topic Filters, but MUST NOT be used within a Topic Name.
-        if((std::string_view::npos != level.find(mqtt_detail::TopicSingleLevelWildcard))
-           && ((TopicType::Name == p_type)
-               || (mqtt_detail::TopicSingleLevelWildcard != level)))
-        {
-          return false;
-        }
-
-        // mqtt-v5.0-os 4.7.1 Topic Wildcards
-        // 2939: The wildcard characters can be used in Topic Filters, but MUST NOT be used within a Topic Name.
-        if((std::string_view::npos != level.find(mqtt_detail::TopicMultiLevelWildcard))
-           && ((TopicType::Name == p_type)
-               || (mqtt_detail::TopicMultiLevelWildcard != level)
-               || (max_levels != level_no)))
-        {
-          return false;
-        }
-      }
-      break;
-    }
-
-    default:
-      throw std::runtime_error("MQTT topic_validate: topic type must be 'Name' or 'Filter'.");
+    return TopicValidStatus::Invalid;
   }
 
-  return true;
+  // mqtt-v5.0-os 4.7.1 Topic Wildcards
+  // 2939: The wildcard characters can be used in Topic Filters, but MUST NOT be used within a Topic Name.
+  if((token_type::npos != p_level.find_pos(mqtt_detail::TopicMultiLevelWildcardChar))
+     && ((TopicType::Name == p_type)
+         || (mqtt_detail::TopicMultiLevelWildcard != p_level)
+         || has_more))
+  {
+    return TopicValidStatus::Invalid;
+  }
+
+  return TopicValidStatus::Valid;
 }
 
-bool topic_validate(const std::string_view p_topic,
-                    const TopicType p_type)
+TopicValidStatus topic_validate(std::string_view p_topic,
+                           const TopicType p_type)
 {
-  return topic_validate(topic_tokenize_view(p_topic), p_type);
+  if((p_type != TopicType::Name)
+    && (p_type != TopicType::Filter))
+  {
+    return TopicValidStatus::BadParam;
+  }
+
+  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
+                           mqtt_detail::TopicLevelSeparatorChar};
+
+  while(!tokenizer.empty() || tokenizer.has_more())
+  {
+    token_type level = tokenizer.scan();
+
+    if(auto status = topic_validate_level(level,
+                                          p_type,
+                                          tokenizer.has_more());
+       TopicValidStatus::Valid != status)
+    {
+      return status;
+    }
+  }
+
+  return TopicValidStatus::Valid;
 }
 
-bool topic_match(const TopicLevelsView & p_filter,
-                 const TopicLevelsView & p_topic) noexcept
+
+TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
+                           const TopicType p_type)
+{
+  if((p_type != TopicType::Name)
+    && (p_type != TopicType::Filter))
+  {
+    return TopicValidStatus::BadParam;
+  }
+
+  const std::size_t max_levels = p_levels.size();
+  std::size_t level_no = 0;
+
+
+  for(const auto & level : p_levels)
+  {
+    ++level_no;
+
+    if(auto status = topic_validate_level(yy_quad::make_span(level),
+                                          p_type,
+                                          max_levels != level_no);
+       TopicValidStatus::Valid != status)
+    {
+      return status;
+    }
+  }
+
+  return TopicValidStatus::Valid;
+}
+
+TopicMatchStatus topic_match_level(const token_type p_filter_level,
+                                   const token_type p_topic_level) noexcept
+{
+  if(mqtt_detail::TopicMultiLevelWildcard == p_filter_level)
+  {
+    // Filter has '#' wildcard so success.
+    return TopicMatchStatus::Match;
+  }
+
+  if((mqtt_detail::TopicSingleLevelWildcard != p_filter_level)
+     && (p_topic_level != p_filter_level))
+  {
+    // Not filter level a '*' wildcard or filter level not topic level,
+    // so fail.
+    return TopicMatchStatus::Fail;
+  }
+
+  return TopicMatchStatus::Continue;
+}
+
+TopicMatchStatus topic_match(const std::string_view & p_filter,
+                             const std::string_view & p_topic) noexcept
+{
+  auto filter{yy_quad::make_const_span(p_filter)};
+  auto topic{yy_quad::make_const_span(p_topic)};
+
+  tokenizer_type filter_tokenizer{filter,
+                                  mqtt_detail::TopicLevelSeparatorChar};
+  tokenizer_type topic_tokenizer{topic,
+                                 mqtt_detail::TopicLevelSeparatorChar};
+
+  if(!p_filter.empty()
+     && !p_topic.empty())
+  {
+    auto filter_level_0{tokenizer_type::scan(filter, filter_tokenizer.delim())};
+    auto topic_level_0{tokenizer_type::scan(topic, topic_tokenizer.delim())};
+
+    if(((mqtt_detail::TopicMultiLevelWildcard == filter_level_0)
+        || (mqtt_detail::TopicSingleLevelWildcard == filter_level_0))
+       && !topic_level_0.empty()
+       && (mqtt_detail::TopicSysChar == topic_level_0[0]))
+    {
+      return TopicMatchStatus::Fail;
+    }
+  }
+
+  while(filter_tokenizer.has_more())
+  {
+    token_type filter_level{filter_tokenizer.scan()};
+    token_type topic_level{topic_tokenizer.scan()};
+
+    if(auto status = topic_match_level(filter_level,
+                                       topic_level);
+       TopicMatchStatus::Continue != status)
+    {
+      return status;
+    }
+  }
+
+  if(topic_tokenizer.has_more())
+  {
+    return TopicMatchStatus::Fail;
+  }
+
+  return TopicMatchStatus::Match;
+}
+
+
+TopicMatchStatus topic_match(const TopicLevelsView & p_filter,
+                             const TopicLevelsView & p_topic) noexcept
 {
   std::size_t filter_level_no = 0;
   const std::size_t max_topic_level = p_topic.size();
@@ -157,29 +265,16 @@ bool topic_match(const TopicLevelsView & p_filter,
      && !p_topic[0].empty()
      && (mqtt_detail::TopicSysChar == p_topic[0][0]))
   {
-    return false;
+    return TopicMatchStatus::Fail;
   }
 
   for(const auto & filter_level : p_filter)
   {
-    if(mqtt_detail::TopicMultiLevelWildcard == filter_level)
+    if(auto status = topic_match_level(yy_quad::make_const_span(filter_level),
+                                       yy_quad::make_const_span(p_topic[topic_level_no]));
+       TopicMatchStatus::Continue != status)
     {
-      // Filter has '#' wildcard so success.
-      return true;
-    }
-
-    if(max_topic_level == filter_level_no)
-    {
-      // There are more filter levels than topic levels, so fail.
-      return false;
-    }
-
-    if((mqtt_detail::TopicSingleLevelWildcard != filter_level)
-       && (p_topic[topic_level_no] != filter_level))
-    {
-      // Not filter level a '*' wildcard or filter level not topic level,
-      // so fail.
-      return false;
+      return status;
     }
 
     ++filter_level_no;
@@ -187,13 +282,12 @@ bool topic_match(const TopicLevelsView & p_filter,
   }
 
   // All topic levels matched?
-  return filter_level_no == max_topic_level;
-}
+  if(filter_level_no != max_topic_level)
+  {
+    return TopicMatchStatus::Fail;
+  }
 
-bool topic_match(const std::string_view & p_filter,
-                 const std::string_view & p_topic) noexcept
-{
-  return topic_match(topic_tokenize_view(p_filter), topic_tokenize_view(p_topic));
+  return TopicMatchStatus::Match;
 }
 
 } // namespace yafiyogi::yy_mqtt

@@ -65,55 +65,84 @@ TEST_F(TestTopicUtil, TopicTokenize)
 
 TEST_F(TestTopicUtil, TestValidateSingleLevelWildcard)
 {
-  EXPECT_TRUE(yy_mqtt::topic_validate("+", yy_mqtt::TopicType::Filter));
-  EXPECT_TRUE(yy_mqtt::topic_validate("+/tennis/#", yy_mqtt::TopicType::Filter));
-  EXPECT_FALSE(yy_mqtt::topic_validate("sport+", yy_mqtt::TopicType::Filter));
-  EXPECT_TRUE(yy_mqtt::topic_validate("sport/+/player1", yy_mqtt::TopicType::Filter));
-  EXPECT_THROW(yy_mqtt::topic_validate("sport/+/player1", (yy_mqtt::TopicType)255), std::runtime_error);
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate("+", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate("+/tennis/#", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Invalid, yy_mqtt::topic_validate("sport+", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate("sport/+/player1", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::BadParam, yy_mqtt::topic_validate("sport/+/player1", (yy_mqtt::TopicType)255));
+
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("+"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("+/tennis/#"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Invalid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("sport+"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("sport/+/player1"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::BadParam, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("sport/+/player1"), (yy_mqtt::TopicType)255));
 }
 
 TEST_F(TestTopicUtil, TestMatch)
 {
-  EXPECT_FALSE(yy_mqtt::topic_match("/finance/sport", "/finance"));
-  EXPECT_FALSE(yy_mqtt::topic_match("sport", "finance"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("/finance/sport", "/finance"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("sport", "finance"));
+
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("/finance/sport"), yy_mqtt::topic_tokenize_view("/finance")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("sport"), yy_mqtt::topic_tokenize_view("finance")));
 }
 
 TEST_F(TestTopicUtil, TestMatchSingleLevelWildcard)
 {
-  EXPECT_TRUE(yy_mqtt::topic_match("+/+", "/finance"));
-  EXPECT_FALSE(yy_mqtt::topic_match("+/+", "/finance/"));
-  EXPECT_TRUE(yy_mqtt::topic_match("/+", "/finance"));
-  EXPECT_FALSE(yy_mqtt::topic_match("/+", "/finance/"));
-  EXPECT_FALSE(yy_mqtt::topic_match("+", "/finance"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("+/+", "/finance"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("+/+", "/finance/"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("/+", "/finance"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("/+", "/finance/"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("+", "/finance"));
+
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+/+"), yy_mqtt::topic_tokenize_view("/finance")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+/+"), yy_mqtt::topic_tokenize_view("/finance/")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("/+"), yy_mqtt::topic_tokenize_view("/finance")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("/+"), yy_mqtt::topic_tokenize_view("/finance/")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+"), yy_mqtt::topic_tokenize_view("/finance")));
 }
 
 TEST_F(TestTopicUtil, TestValidateMultiLevelWildcard)
 {
-  EXPECT_TRUE(yy_mqtt::topic_validate("#", yy_mqtt::TopicType::Filter));
-  EXPECT_TRUE(yy_mqtt::topic_validate("sport/tennis/#", yy_mqtt::TopicType::Filter));
-  EXPECT_FALSE(yy_mqtt::topic_validate("sport/tennis#", yy_mqtt::TopicType::Filter));
-  EXPECT_FALSE(yy_mqtt::topic_validate("sport/tennis/#/ranking", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate("#", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate("sport/tennis/#", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Invalid, yy_mqtt::topic_validate("sport/tennis#", yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Invalid, yy_mqtt::topic_validate("sport/tennis/#/ranking", yy_mqtt::TopicType::Filter));
+
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("#"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Valid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("sport/tennis/#"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Invalid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("sport/tennis#"), yy_mqtt::TopicType::Filter));
+  EXPECT_EQ(yy_mqtt::TopicValidStatus::Invalid, yy_mqtt::topic_validate(yy_mqtt::topic_tokenize_view("sport/tennis/#/ranking"), yy_mqtt::TopicType::Filter));
 }
 
 TEST_F(TestTopicUtil, TestMatchMultiLevelWildcard)
 {
-  EXPECT_TRUE(yy_mqtt::topic_match("sport/tennis/player1/#", "sport/tennis/player1"));
-  EXPECT_TRUE(yy_mqtt::topic_match("sport/tennis/player1/#", "sport/tennis/player1/ranking"));
-  EXPECT_TRUE(yy_mqtt::topic_match("sport/tennis/player1/#", "sport/tennis/player1/score/wimbledon"));
-  EXPECT_TRUE(yy_mqtt::topic_match("sport/#", "sport"));
-  EXPECT_TRUE(yy_mqtt::topic_match("#", "sport/tennis/player1"));
-  EXPECT_TRUE(yy_mqtt::topic_match("#", "sport/tennis/player1/ranking"));
-  EXPECT_TRUE(yy_mqtt::topic_match("#", "sport/tennis/player1/score/wimbledon"));
-  EXPECT_TRUE(yy_mqtt::topic_match("#", "sport"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("sport/tennis/player1/#", "sport/tennis/player1"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("sport/tennis/player1/#", "sport/tennis/player1/ranking"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("sport/tennis/player1/#", "sport/tennis/player1/score/wimbledon"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("sport/#", "sport"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("#", "sport/tennis/player1"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("#", "sport/tennis/player1/ranking"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("#", "sport/tennis/player1/score/wimbledon"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("#", "sport"));
+
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("sport/tennis/player1/#"), yy_mqtt::topic_tokenize_view("sport/tennis/player1")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("sport/tennis/player1/#"), yy_mqtt::topic_tokenize_view("sport/tennis/player1/ranking")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("sport/tennis/player1/#"), yy_mqtt::topic_tokenize_view("sport/tennis/player1/score/wimbledon")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("sport/#"), yy_mqtt::topic_tokenize_view("sport")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("#"), yy_mqtt::topic_tokenize_view("sport/tennis/player1")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("#"), yy_mqtt::topic_tokenize_view("sport/tennis/player1/ranking")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("#"), yy_mqtt::topic_tokenize_view("sport/tennis/player1/score/wimbledon")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("#"), yy_mqtt::topic_tokenize_view("sport")));
 }
 
 TEST_F(TestTopicUtil, TestDollarMatch)
 {
-  EXPECT_FALSE(yy_mqtt::topic_match("#", "$sport/tennis/player1"));
-  EXPECT_FALSE(yy_mqtt::topic_match("+/monlitor/Clients", "$SYS/monlitor/Clients"));
-  EXPECT_TRUE(yy_mqtt::topic_match("$SYS/#", "$SYS/"));
-  EXPECT_TRUE(yy_mqtt::topic_match("$SYS/#", "$SYS/monitor"));
-  EXPECT_TRUE(yy_mqtt::topic_match("$SYS/monitor/+", "$SYS/monitor/Clients"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("#"), yy_mqtt::topic_tokenize_view("$sport/tennis/player1")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+/monlitor/Clients"), yy_mqtt::topic_tokenize_view("$SYS/monlitor/Clients")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("$SYS/#"), yy_mqtt::topic_tokenize_view("$SYS/")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("$SYS/#"), yy_mqtt::topic_tokenize_view("$SYS/monitor")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("$SYS/monitor/+"), yy_mqtt::topic_tokenize_view("$SYS/monitor/Clients")));
 }
 
 } // namespace yafiyogi::yy_mqtt::tests

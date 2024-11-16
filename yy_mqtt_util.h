@@ -40,12 +40,15 @@ TopicLevelsView topic_tokenize_view(const std::string_view p_topic) noexcept;
 TopicLevels & topic_tokenize(TopicLevels & p_levels,
                              const std::string_view p_topic) noexcept;
 TopicLevels topic_tokenize(const std::string_view p_topic) noexcept;
-bool topic_validate(std::string_view p_topic,
-                    const TopicType type);
-bool topic_validate(const TopicType p_type);
-bool topic_match(const TopicLevelsView & p_filter,
-                 const TopicLevelsView & p_topic) noexcept;
-bool topic_match(const std::string_view & p_filter,
-                 const std::string_view & p_topic) noexcept;
+enum class TopicValidStatus { Valid, Invalid, BadParam};
+TopicValidStatus topic_validate(std::string_view topic,
+                        const TopicType p_type);
+TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
+                           const TopicType p_type);
+enum class TopicMatchStatus { Match, Fail, Continue};
+TopicMatchStatus topic_match(const std::string_view & p_filter,
+                                 const std::string_view & p_topic) noexcept;
+TopicMatchStatus topic_match(const TopicLevelsView & p_filter,
+                             const TopicLevelsView & p_topic) noexcept;
 
 } // namespace yafiyogi::yy_mqtt
