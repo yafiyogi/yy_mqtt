@@ -46,7 +46,7 @@ using token_type = tokenizer_type::token_type;
 
 std::string_view topic_trim(const std::string_view p_topic) noexcept
 {
-  return yy_util::trim(yy_util::trim(p_topic), mqtt_detail::TopicLevelSeparator);
+  return yy_util::trim_right(yy_util::trim(p_topic), mqtt_detail::TopicLevelSeparator);
 }
 
 TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
@@ -55,10 +55,11 @@ TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
   tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
                            mqtt_detail::TopicLevelSeparatorChar};
   p_levels.clear();
+  p_levels.reserve(static_cast<std::size_t>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
 
   while(!tokenizer.empty() || tokenizer.has_more())
   {
-    auto level = tokenizer.scan();
+    auto level{tokenizer.scan()};
     p_levels.emplace_back(std::string_view{level.data(), level.size()});
   }
 
@@ -75,16 +76,17 @@ TopicLevelsView topic_tokenize_view(const std::string_view p_topic) noexcept
 }
 
 TopicLevels & topic_tokenize(TopicLevels & p_levels,
-                           const std::string_view p_topic) noexcept
+                             const std::string_view p_topic) noexcept
 {
   tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
                            mqtt_detail::TopicLevelSeparatorChar};
   p_levels.clear();
+  p_levels.reserve(static_cast<std::size_t>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
 
   while(!tokenizer.empty() || tokenizer.has_more())
   {
-    auto level = tokenizer.scan();
-    p_levels.emplace_back(level.begin(), level.end());
+    auto level{tokenizer.scan()};
+    p_levels.emplace_back(std::string{level.data(), level.size()});
   }
 
   return p_levels;
@@ -99,13 +101,13 @@ TopicLevels topic_tokenize(const std::string_view p_topic) noexcept
   return levels;
 }
 
-TopicValidStatus topic_validate_level(token_type p_level,
-                                 const TopicType p_type,
-                                 const bool has_more)
+TopicValidStatus topic_validate_level(std::string_view p_level,
+                                      const TopicType p_type,
+                                      const bool has_more)
 {
   // mqtt-v5.0-os 4.7.1 Topic Wildcards
   // 2939: The wildcard characters can be used in Topic Filters, but MUST NOT be used within a Topic Name.
-  if((token_type::npos != p_level.find_pos(mqtt_detail::TopicSingleLevelWildcardChar))
+  if((std::string_view::npos != p_level.find(mqtt_detail::TopicSingleLevelWildcardChar))
      && ((TopicType::Name == p_type)
          || (mqtt_detail::TopicSingleLevelWildcard != p_level)))
   {
@@ -114,7 +116,7 @@ TopicValidStatus topic_validate_level(token_type p_level,
 
   // mqtt-v5.0-os 4.7.1 Topic Wildcards
   // 2939: The wildcard characters can be used in Topic Filters, but MUST NOT be used within a Topic Name.
-  if((token_type::npos != p_level.find_pos(mqtt_detail::TopicMultiLevelWildcardChar))
+  if((std::string_view::npos != p_level.find(mqtt_detail::TopicMultiLevelWildcardChar))
      && ((TopicType::Name == p_type)
          || (mqtt_detail::TopicMultiLevelWildcard != p_level)
          || has_more))
@@ -126,10 +128,10 @@ TopicValidStatus topic_validate_level(token_type p_level,
 }
 
 TopicValidStatus topic_validate(std::string_view p_topic,
-                           const TopicType p_type)
+                                const TopicType p_type)
 {
   if((p_type != TopicType::Name)
-    && (p_type != TopicType::Filter))
+     && (p_type != TopicType::Filter))
   {
     return TopicValidStatus::BadParam;
   }
@@ -141,7 +143,7 @@ TopicValidStatus topic_validate(std::string_view p_topic,
   {
     token_type level = tokenizer.scan();
 
-    if(auto status = topic_validate_level(level,
+    if(auto status = topic_validate_level(std::string_view{level.data(), level.size()},
                                           p_type,
                                           tokenizer.has_more());
        TopicValidStatus::Valid != status)
@@ -153,12 +155,11 @@ TopicValidStatus topic_validate(std::string_view p_topic,
   return TopicValidStatus::Valid;
 }
 
-
 TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
-                           const TopicType p_type)
+                                const TopicType p_type)
 {
   if((p_type != TopicType::Name)
-    && (p_type != TopicType::Filter))
+     && (p_type != TopicType::Filter))
   {
     return TopicValidStatus::BadParam;
   }
@@ -171,7 +172,7 @@ TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
   {
     ++level_no;
 
-    if(auto status = topic_validate_level(yy_quad::make_span(level),
+    if(auto status = topic_validate_level(level,
                                           p_type,
                                           max_levels != level_no);
        TopicValidStatus::Valid != status)

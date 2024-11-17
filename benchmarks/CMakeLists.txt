@@ -16,6 +16,11 @@ add_executable(benchmark_yy_mqtt
   bench_state_topics.cpp
   bench_variant_state_topics.cpp
 
+  bench_topic_tokenize.cpp
+  bench_topic_tokenize_view.cpp
+
+  bench_topic_validate.cpp
+
   bench_yy_mqtt.cpp )
 
 target_include_directories(yy_mqtt
