@@ -43,8 +43,8 @@ target_link_directories(benchmark_yy_mqtt
   /opt/local/lib )
 
 target_link_libraries(benchmark_yy_mqtt
-  yy_cpp::yy_cpp
   yy_mqtt
+  yy_cpp::yy_cpp
   benchmark::benchmark
   Boost::locale
   fmt::fmt
