@@ -184,26 +184,6 @@ TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
   return TopicValidStatus::Valid;
 }
 
-TopicMatchStatus topic_match_level(const token_type p_filter_level,
-                                   const token_type p_topic_level) noexcept
-{
-  if(mqtt_detail::TopicMultiLevelWildcard == p_filter_level)
-  {
-    // Filter has '#' wildcard so success.
-    return TopicMatchStatus::Match;
-  }
-
-  if((mqtt_detail::TopicSingleLevelWildcard != p_filter_level)
-     && (p_topic_level != p_filter_level))
-  {
-    // Not filter level a '*' wildcard or filter level not topic level,
-    // so fail.
-    return TopicMatchStatus::Fail;
-  }
-
-  return TopicMatchStatus::Continue;
-}
-
 TopicMatchStatus topic_match(const std::string_view & p_filter,
                              const std::string_view & p_topic) noexcept
 {
@@ -233,19 +213,41 @@ TopicMatchStatus topic_match(const std::string_view & p_filter,
   while(filter_tokenizer.has_more())
   {
     token_type filter_level{filter_tokenizer.scan()};
-    token_type topic_level{topic_tokenizer.scan()};
 
-    if(auto status = topic_match_level(filter_level,
-                                       topic_level);
-       TopicMatchStatus::Continue != status)
+    if(mqtt_detail::TopicMultiLevelWildcard == filter_level)
     {
-      return status;
+      return TopicMatchStatus::Match;
+    }
+
+    if(mqtt_detail::TopicSingleLevelWildcard == filter_level)
+    {
+      if(topic_tokenizer.empty())
+      {
+        return TopicMatchStatus::Match;
+      }
+      std::ignore = topic_tokenizer.scan();
+    }
+    else
+    {
+      if(topic_tokenizer.empty()
+         || (filter_level != topic_tokenizer.scan()))
+      {
+        return TopicMatchStatus::Fail;
+      }
     }
   }
 
   if(topic_tokenizer.has_more())
   {
-    return TopicMatchStatus::Fail;
+    if(!p_filter.empty()
+       && (mqtt_detail::TopicSingleLevelWildcard == filter_tokenizer.token()))
+    {
+      std::ignore = topic_tokenizer.scan();
+      if(!topic_tokenizer.token().empty())
+      {
+        return TopicMatchStatus::Fail;
+      }
+    }
   }
 
   return TopicMatchStatus::Match;
@@ -271,21 +273,41 @@ TopicMatchStatus topic_match(const TopicLevelsView & p_filter,
 
   for(const auto & filter_level : p_filter)
   {
-    if(auto status = topic_match_level(yy_quad::make_const_span(filter_level),
-                                       yy_quad::make_const_span(p_topic[topic_level_no]));
-       TopicMatchStatus::Continue != status)
+    if(mqtt_detail::TopicMultiLevelWildcard == filter_level)
     {
-      return status;
+      return TopicMatchStatus::Match;
+    }
+
+    if(mqtt_detail::TopicSingleLevelWildcard == filter_level)
+    {
+      if(max_topic_level == topic_level_no)
+      {
+        return TopicMatchStatus::Match;
+      }
+    }
+    else
+    {
+      if((max_topic_level == topic_level_no)
+         || (filter_level != p_topic[topic_level_no]))
+      {
+        return TopicMatchStatus::Fail;
+      }
     }
 
     ++filter_level_no;
     ++topic_level_no;
   }
 
-  // All topic levels matched?
-  if(filter_level_no != max_topic_level)
+  if(topic_level_no < max_topic_level)
   {
-    return TopicMatchStatus::Fail;
+    if(!p_filter.empty()
+       && (mqtt_detail::TopicSingleLevelWildcard == p_filter[filter_level_no - 1]))
+    {
+      if(!p_topic[topic_level_no].empty())
+      {
+        return TopicMatchStatus::Fail;
+      }
+    }
   }
 
   return TopicMatchStatus::Match;

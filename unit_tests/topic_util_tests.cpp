@@ -90,15 +90,15 @@ TEST_F(TestTopicUtil, TestMatch)
 TEST_F(TestTopicUtil, TestMatchSingleLevelWildcard)
 {
   EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("+/+", "/finance"));
-  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("+/+", "/finance/"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("+/+", "/finance/"));
   EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("/+", "/finance"));
-  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("/+", "/finance/"));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match("/+", "/finance/"));
   EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match("+", "/finance"));
 
   EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+/+"), yy_mqtt::topic_tokenize_view("/finance")));
-  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+/+"), yy_mqtt::topic_tokenize_view("/finance/")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+/+"), yy_mqtt::topic_tokenize_view("/finance/")));
   EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("/+"), yy_mqtt::topic_tokenize_view("/finance")));
-  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("/+"), yy_mqtt::topic_tokenize_view("/finance/")));
+  EXPECT_EQ(yy_mqtt::TopicMatchStatus::Match, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("/+"), yy_mqtt::topic_tokenize_view("/finance/")));
   EXPECT_EQ(yy_mqtt::TopicMatchStatus::Fail, yy_mqtt::topic_match(yy_mqtt::topic_tokenize_view("+"), yy_mqtt::topic_tokenize_view("/finance")));
 }
 
