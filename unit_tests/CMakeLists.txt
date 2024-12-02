@@ -77,5 +77,5 @@ add_dependencies(test test_yy_mqtt)
 
 # Coverage target
 add_cmake_coverage(yy_mqtt test)
-add_cmake_asan(test_yy_mqtt)
-add_cmake_lsan(test_yy_mqtt)
+add_cmake_asan(yy_mqtt test_yy_mqtt)
+add_cmake_lsan(yy_mqtt test_yy_mqtt)
