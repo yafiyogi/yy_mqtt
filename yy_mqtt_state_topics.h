@@ -244,7 +244,7 @@ class Query final
 
         find(m_search_states, m_payloads);
 
-        m_search_states.erase(m_search_states.begin(), yy_quad::ClearAction::Keep);
+        m_search_states.pop_front(yy_quad::ClearAction::Keep);
       }
     }
 
