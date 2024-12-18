@@ -25,6 +25,7 @@
 */
 
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 #include "gtest/gtest.h"
 
 #include "yy_cpp/yy_tokenizer.h"
@@ -90,7 +91,7 @@ class TestStateTopics:
         test_fn(payload);
       }
 
-      return (end_ptr == value_ptr) && (0 == count);
+      return (end_ptr == value_ptr) && (0 == count) && (payloads.size() == p_values.size());
     }
 };
 
@@ -127,7 +128,7 @@ TEST_F(TestStateTopics, TestTrieMatch)
 {
   EXPECT_TRUE(test_topic({{"/+", 111},{"/+/+", 112}}, "/roofer", Values{111}));
   EXPECT_TRUE(test_topic({{"/+", 222},{"/+/+", 223}}, "/roofer/", Values{222, 223}));
-  EXPECT_TRUE(test_topic({{"/+", 333},{"/+/#", 334}}, "/roofer", Values{333}));
+  EXPECT_TRUE(test_topic({{"/+", 333},{"/+/#", 334}}, "/roofer", Values{333, 334}));
   EXPECT_TRUE(test_topic({{"/+", 444}}, "/roofer/", Values{444}));
   EXPECT_TRUE(test_topic({{"/+/#", 555}}, "/roofer/", Values{555}));
   EXPECT_TRUE(test_topic({{"/+", 666},{"/+/#", 667}}, "/roofer/", Values{666, 667}));

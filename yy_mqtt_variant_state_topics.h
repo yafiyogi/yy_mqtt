@@ -117,14 +117,6 @@ class Query final
     static constexpr topic_type single_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
     static constexpr topic_type multi_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
 
-    static constexpr void add_wildcards(topic_type p_topic,
-                                        node_ptr p_node,
-                                        queue & p_search_states) noexcept
-    {
-      add_sub_state<single_level_state>(single_level_wildcard, p_topic, p_node, p_search_states);
-      add_sub_state<multi_level_state>(multi_level_wildcard, p_topic, p_node, p_search_states);
-    }
-
     static constexpr void add_payload(node_ptr p_node,
                                       payloads_type & p_payloads) noexcept
     {
@@ -160,8 +152,17 @@ class Query final
             {
               return;
             }
-            // Topic is 'abc/cde/', try to match 'abc/cde/+' & 'abc/cde/#'
-            add_wildcards(topic_tokens.source(), state_base_type::m_state, p_search_states);
+
+            auto rest_topic{topic_tokens.source()};
+            if(topic_tokens.has_more())
+            {
+              // mqtt-v5.0 4.7.1.3 Single-level wildcard
+              // 2979: "sport/+” does not match “sport” but it does match “sport/”.
+              // Topic is 'abc/cde/', try to match 'abc/cde/+'
+              add_sub_state<single_level_state>(single_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
+            }
+            // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
+            add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
           }
 
           // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
@@ -191,8 +192,15 @@ class Query final
             p_search_states.emplace_back(search_state{literal_state{rest_topic, state_base_type::m_state}});
           }
 
-          // Try to match 'abc/+/+' and 'abc/+/#'
-          add_wildcards(rest_topic, state_base_type::m_state, p_search_states);
+          if(topic_tokens.has_more())
+          {
+            // mqtt-v5.0 4.7.1.3 Single-level wildcard
+            // 2979: "sport/+” does not match “sport” but it does match “sport/”.
+            // Topic is 'abc/cde/', try to match 'abc/cde/+'
+            add_sub_state<single_level_state>(single_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
+          }
+          // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
+          add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
         }
     };
 
@@ -210,7 +218,11 @@ class Query final
     constexpr void find_span(topic_type p_topic) noexcept
     {
       m_search_states.emplace_back(search_state{literal_state{p_topic, m_nodes.data()}});
-      add_wildcards(p_topic, m_nodes.data(), m_search_states);
+      if(mqtt_detail::TopicSysChar != p_topic[0])
+      {
+        add_sub_state<single_level_state>(single_level_wildcard, p_topic, m_nodes.data(), m_search_states);
+        add_sub_state<multi_level_state>(multi_level_wildcard, p_topic, m_nodes.data(), m_search_states);
+      }
 
       while(!m_search_states.empty())
       {

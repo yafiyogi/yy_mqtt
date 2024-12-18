@@ -116,8 +116,8 @@ class Query final
       std::ignore = p_state->find_edge(sub_state_do, p_label);
     }
 
-    static constexpr auto single_leve_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
-    static constexpr auto multi_leve_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
+    static constexpr auto single_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
+    static constexpr auto multi_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
 
     static constexpr void add_wildcards(node_type * p_node,
                                         topic_type p_topic,
@@ -125,8 +125,8 @@ class Query final
     {
       YY_ASSERT(p_node);
 
-      add_sub_state(single_leve_wildcard, p_topic, search_type::SingleLevelWild, p_node, p_states_list);
-      add_sub_state(multi_leve_wildcard, p_topic, search_type::MultiLevelWild, p_node, p_states_list);
+      add_sub_state(single_level_wildcard, p_topic, search_type::SingleLevelWild, p_node, p_states_list);
+      add_sub_state(multi_level_wildcard, p_topic, search_type::MultiLevelWild, p_node, p_states_list);
     }
 
     static constexpr bool add_payload(node_type * p_node,
@@ -147,7 +147,11 @@ class Query final
     constexpr void find_span(topic_type p_topic) noexcept
     {
       m_search_states.emplace_back(p_topic, m_nodes.data(), search_type::Literal);
-      add_wildcards(m_nodes.data(), p_topic, m_search_states);
+      if(mqtt_detail::TopicSysChar != p_topic[0])
+      {
+        add_sub_state(single_level_wildcard, p_topic, search_type::SingleLevelWild, m_nodes.data(), m_search_states);
+        add_sub_state(multi_level_wildcard, p_topic, search_type::MultiLevelWild, m_nodes.data(), m_search_states);
+      }
 
       while(!m_search_states.empty())
       {
@@ -176,8 +180,16 @@ class Query final
                 break;
               }
 
-              // Topic is 'abc/cde/', try to match 'abc/cde/+' & 'abc/cde/#'
-              add_wildcards(state, topic_tokens.source(), m_search_states);
+              auto rest_topic{topic_tokens.source()};
+              if(topic_tokens.has_more())
+              {
+                // mqtt-v5.0 4.7.1.3 Single-level wildcard
+                // 2979: "sport/+” does not match “sport” but it does match “sport/”.
+                // Topic is 'abc/cde/', try to match 'abc/cde/+'
+                add_sub_state(single_level_wildcard, rest_topic, search_type::SingleLevelWild, state, m_search_states);
+              }
+              // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
+              add_sub_state(multi_level_wildcard, rest_topic, search_type::MultiLevelWild, state, m_search_states);
             }
 
             if(found)
@@ -205,8 +217,16 @@ class Query final
               m_search_states.emplace_back(topic, state, search_type::Literal);
             }
 
-            // Try to match 'abc/+/+' and 'abc/+/#'
-            add_wildcards(state, topic, m_search_states);
+            auto rest_topic{topic_tokens.source()};
+            if(topic_tokens.has_more())
+            {
+              // mqtt-v5.0 4.7.1.3 Single-level wildcard
+              // 2979: "sport/+” does not match “sport” but it does match “sport/”.
+              // Topic is 'abc/cde/', try to match 'abc/cde/+'
+              add_sub_state(single_level_wildcard, rest_topic, search_type::SingleLevelWild, state, m_search_states);
+            }
+            // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
+            add_sub_state(multi_level_wildcard, rest_topic, search_type::MultiLevelWild, state, m_search_states);
             break;
           }
 
