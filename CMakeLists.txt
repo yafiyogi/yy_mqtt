@@ -35,16 +35,17 @@ set(YY_ROOT "${PROJECT_SOURCE_DIR}/..")
 set(YY_CMAKE "${YY_ROOT}/yy_cmake")
 
 include(${YY_CMAKE}/cmake_common.txt)
-
-include(${YY_CMAKE}/cmake_boost-1.84.0.txt)
 include(${YY_CMAKE}/cmake_clang_tidy.txt)
 
+include(${YY_CMAKE}/cmake_boost-1.84.0.txt)
+
 find_package(Boost 1.84.0 REQUIRED COMPONENTS locale)
+find_package(yy_cpp REQUIRED)
 
 add_library(yy_mqtt STATIC)
 
 target_include_directories(yy_mqtt
-  PRIVATE
+  SYSTEM PRIVATE
     "${CMAKE_INSTALL_PREFIX}/include"
     "${YY_THIRD_PARTY_LIBRARY}/include" )
 

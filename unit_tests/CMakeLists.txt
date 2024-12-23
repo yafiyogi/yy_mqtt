@@ -43,6 +43,11 @@ add_executable(test_yy_mqtt
   topic_tests.cpp
   topic_util_tests.cpp )
 
+target_compile_options(yy_mqtt
+  PRIVATE
+  "-DSPDLOG_COMPILED_LIB"
+  "-DSPDLOG_FMT_EXTERNAL")
+
 target_include_directories(test_yy_mqtt
   PRIVATE
     "${PROJECT_SOURCE_DIR}/.."
@@ -52,11 +57,6 @@ target_include_directories(test_yy_mqtt
 target_link_directories(test_yy_mqtt
   PUBLIC
   /opt/local/lib )
-
-target_compile_options(yy_mqtt
-  PRIVATE
-  "-DSPDLOG_COMPILED_LIB"
-  "-DSPDLOG_FMT_EXTERNAL")
 
 target_link_libraries(test_yy_mqtt
   yy_mqtt
