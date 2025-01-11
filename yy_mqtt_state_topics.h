@@ -138,7 +138,7 @@ class Query final
                                         topic_type p_topic,
                                         node_ptr p_node,
                                         find_fn p_find,
-                                        queue & p_search_states)
+                                        queue & p_search_states) noexcept
     {
       auto sub_state_do = [p_topic, p_find, &p_search_states]
                           (node_ptr * edge_node, size_type /* pos */) {
