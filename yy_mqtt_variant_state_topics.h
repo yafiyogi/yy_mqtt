@@ -104,7 +104,7 @@ class Query final
     static constexpr void add_sub_state(const topic_type p_label,
                                         topic_type p_topic,
                                         node_ptr p_node,
-                                        queue & p_search_states)
+                                        queue & p_search_states) noexcept
     {
       auto sub_state_do = [p_topic, &p_search_states]
                           (node_ptr * edge_node, size_type /* pos */) {
@@ -234,7 +234,7 @@ class Query final
 
         std::visit(do_state_find, state);
 
-        m_search_states.erase(m_search_states.begin(), yy_quad::ClearAction::Keep);
+        m_search_states.pop_front(yy_quad::ClearAction::Keep);
       }
     }
 
