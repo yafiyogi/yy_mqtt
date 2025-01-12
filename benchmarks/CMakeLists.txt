@@ -28,7 +28,9 @@ cmake_minimum_required(VERSION 3.24)
 
 project(benchmark_yy_mqtt LANGUAGES CXX)
 
-find_package(Boost 1.84.0 REQUIRED COMPONENTS locale)
+include(${YY_CMAKE}/cmake_boost-1.84.0.txt)
+
+find_package(Boost CONFIG 1.84.0 REQUIRED COMPONENTS locale)
 find_package(fmt REQUIRED)
 find_package(benchmark REQUIRED)
 find_package(spdlog REQUIRED)
