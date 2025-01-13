@@ -51,6 +51,7 @@ target_sources(yy_mqtt
     FILES
       yy_mqtt_constants.h
       yy_mqtt_state_topics.h
+      yy_mqtt_variant_state_topics.h
       yy_mqtt_types.h
       yy_mqtt_util.h)
 
