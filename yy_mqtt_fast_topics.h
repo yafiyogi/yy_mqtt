@@ -91,7 +91,7 @@ class Query final
 
       if(!topic.empty())
       {
-        find_span(yy_quad::make_span(topic));
+        find_span(yy_quad::make_const_span(topic));
       }
 
       return yy_quad::make_span(m_payloads);
