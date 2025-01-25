@@ -58,7 +58,7 @@ class Query final
     using payloads_type = yy_quad::simple_vector<value_type *>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
     enum class search_type:uint8_t {Literal, SingleLevel, MultiLevel};
-    struct state_type
+    struct state_type final
     {
         topic_type topic{};
         node_type * state = nullptr;

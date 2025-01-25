@@ -101,7 +101,7 @@ class Query final
                              queue & /* p_search_states */,
                              payloads_type & /* p_payloads */) noexcept;
 
-    class state_type
+    class state_type final
     {
       public:
         constexpr state_type(topic_type p_topic,

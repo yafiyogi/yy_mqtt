@@ -60,7 +60,7 @@ class Query final
     enum class search_type:uint8_t {Literal, SingleLevelWild, MultiLevelWild};
     using tokenizer_type = typename traits::tokenizer_type;
 
-    struct state_type
+    struct state_type final
     {
         topic_type topic{};
         node_type * state = nullptr;

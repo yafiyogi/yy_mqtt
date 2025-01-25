@@ -38,7 +38,7 @@ namespace yafiyogi::yy_mqtt {
 namespace topics_detail {
 
 template<typename ValueType>
-struct topics_traits
+struct topics_traits final
 {
     using trie_node_traits = yy_data::trie_detail::trie_node_traits<char, ValueType>;
     using label_type = typename trie_node_traits::label_type;

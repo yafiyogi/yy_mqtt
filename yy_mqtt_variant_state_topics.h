@@ -133,7 +133,7 @@ class Query final
     };
 
     friend literal_state;
-    struct literal_state:
+    struct literal_state final:
       public state_base_type
     {
         constexpr void operator()(queue & p_search_states,
@@ -171,7 +171,7 @@ class Query final
     };
 
     friend single_level_state;
-    struct single_level_state:
+    struct single_level_state final:
       public state_base_type
     {
         constexpr void operator()(queue & p_search_states,
@@ -205,7 +205,7 @@ class Query final
     };
 
     friend multi_level_state;
-    struct multi_level_state:
+    struct multi_level_state final:
       public state_base_type
     {
         constexpr void operator()(queue & /* p_search_states */,
