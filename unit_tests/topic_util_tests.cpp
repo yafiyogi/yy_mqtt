@@ -53,7 +53,7 @@ TEST_F(TestTopicUtil, TopicTrim)
   EXPECT_EQ(yy_mqtt::topic_trim("sport/finance/"), "sport/finance");
 }
 
-TEST_F(TestTopicUtil, TopicTokenize)
+TEST_F(TestTopicUtil, TopicTokenizeView)
 {
   EXPECT_EQ((TopicLevelsView{"abc"}), yy_mqtt::topic_tokenize_view("abc"));
   EXPECT_EQ((TopicLevelsView{"abc", ""}), yy_mqtt::topic_tokenize_view("abc/"));
@@ -61,6 +61,16 @@ TEST_F(TestTopicUtil, TopicTokenize)
   EXPECT_EQ((TopicLevelsView{"", "abc"}), yy_mqtt::topic_tokenize_view("/abc"));
   EXPECT_EQ((TopicLevelsView{"", "abc", ""}), yy_mqtt::topic_tokenize_view("/abc/"));
   EXPECT_EQ((TopicLevelsView{"", "abc", "def"}), yy_mqtt::topic_tokenize_view("/abc/def"));
+}
+
+TEST_F(TestTopicUtil, TopicTokenize)
+{
+  EXPECT_EQ((TopicLevels{"abc"}), yy_mqtt::topic_tokenize("abc"));
+  EXPECT_EQ((TopicLevels{"abc", ""}), yy_mqtt::topic_tokenize("abc/"));
+  EXPECT_EQ((TopicLevels{"abc", "def"}), yy_mqtt::topic_tokenize("abc/def"));
+  EXPECT_EQ((TopicLevels{"", "abc"}), yy_mqtt::topic_tokenize("/abc"));
+  EXPECT_EQ((TopicLevels{"", "abc", ""}), yy_mqtt::topic_tokenize("/abc/"));
+  EXPECT_EQ((TopicLevels{"", "abc", "def"}), yy_mqtt::topic_tokenize("/abc/def"));
 }
 
 TEST_F(TestTopicUtil, TestValidateSingleLevelWildcard)
