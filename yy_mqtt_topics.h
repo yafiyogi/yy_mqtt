@@ -65,7 +65,6 @@ class Query final
     using queue = std::vector<std::tuple<label_type, node_type *>>;
     using value_type = typename traits::value_type;
     using payloads_type = std::vector<value_type *>;
-    using size_type = typename traits::size_type;
 
     constexpr explicit Query(root_node_ptr p_root) noexcept:
       m_root(std::move(p_root))

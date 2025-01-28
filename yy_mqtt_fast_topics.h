@@ -49,7 +49,6 @@ class Query final
     using node_type = typename traits::ptr_node_type;
     using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
-    using size_type = typename traits::size_type;
     using trie_vector = typename traits::ptr_trie_vector;
     using trie_iterator = trie_vector::iterator;
     using data_vector = typename traits::data_vector;

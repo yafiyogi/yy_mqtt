@@ -51,7 +51,6 @@ class Query final
     using label_type = typename traits::label_type;
     using node_type = typename traits::ptr_node_type;
     using value_type = typename traits::value_type;
-    using size_type = typename traits::size_type;
     using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
     using topic_type = yy_quad::const_span<std::string_view::value_type>;

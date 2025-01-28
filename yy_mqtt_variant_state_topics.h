@@ -54,7 +54,6 @@ class Query final
     using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
     using value_ptr = typename traits::value_ptr;
-    using size_type = typename traits::size_type;
     using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
     using payloads_type = yy_quad::simple_vector<value_ptr>;
