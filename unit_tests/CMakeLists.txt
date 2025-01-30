@@ -2,7 +2,7 @@
 #
 #  MIT License
 #
-#  Copyright (c) 2024 Yafiyogi
+#  Copyright (c) 2024-2025 Yafiyogi
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.25)
 
 project(test_yy_mqtt LANGUAGES CXX)
 
