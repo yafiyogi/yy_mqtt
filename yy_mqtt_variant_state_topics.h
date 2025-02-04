@@ -31,6 +31,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <functional>
 
 #include "yy_cpp/yy_assert.h"
 #include "yy_cpp/yy_fm_flat_trie_ptr.h"
