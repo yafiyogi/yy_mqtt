@@ -97,8 +97,8 @@ class Query final
     struct literal_state;
     struct single_level_state;
     struct multi_level_state;
-    using search_state = std::variant<literal_state, single_level_state, multi_level_state>;
-    using queue = yy_quad::vector<search_state, yy_data::ClearAction::Keep>;
+    using search_state_type = std::variant<literal_state, single_level_state, multi_level_state>;
+    using queue = yy_quad::vector<search_state_type, yy_data::ClearAction::Keep>;
 
     template<typename StateType>
     static constexpr void add_sub_state(const topic_type p_label,
@@ -106,9 +106,9 @@ class Query final
                                         node_ptr p_node,
                                         queue & p_search_states) noexcept
     {
-      auto sub_state_do = [p_topic, &p_search_states]
+      auto sub_state_do = [&p_topic, &p_search_states]
                           (node_ptr * edge_node, size_type /* pos */) {
-        p_search_states.emplace_back(search_state{StateType{p_topic, *edge_node}});
+        p_search_states.emplace_back(StateType{p_topic, *edge_node});
       };
 
       std::ignore = p_node->find_edge(sub_state_do, p_label);
@@ -126,29 +126,22 @@ class Query final
       }
     }
 
-    struct state_base_type
-    {
-        topic_type m_topic{};
-        node_ptr m_state = nullptr;
-    };
-
     friend literal_state;
-    struct literal_state final:
-      public state_base_type
+    struct literal_state final
     {
         constexpr void operator()(queue & p_search_states,
                                   payloads_type & p_payloads) noexcept
         {
           auto next_state_do = [this](node_ptr * edge_node, size_type) {
-            state_base_type::m_state = *edge_node;
+            m_state = *edge_node;
           };
 
-          tokenizer_type topic_tokens{state_base_type::m_topic};
+          tokenizer_type topic_tokens{m_topic};
 
           while(!topic_tokens.empty())
           {
             if(const auto level{topic_tokens.scan()};
-               !state_base_type::m_state->find_edge(next_state_do, level))
+               !m_state->find_edge(next_state_do, level))
             {
               return;
             }
@@ -159,37 +152,39 @@ class Query final
               // mqtt-v5.0 4.7.1.3 Single-level wildcard
               // 2979: "sport/+” does not match “sport” but it does match “sport/”.
               // Topic is 'abc/cde/', try to match 'abc/cde/+'
-              add_sub_state<single_level_state>(single_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
+              add_sub_state<single_level_state>(single_level_wildcard, rest_topic, m_state, p_search_states);
             }
             // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
-            add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
+            add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, m_state, p_search_states);
           }
 
           // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
-          add_payload(state_base_type::m_state, p_payloads);
+          add_payload(m_state, p_payloads);
         }
+
+        topic_type m_topic{};
+        node_ptr m_state = nullptr;
     };
 
     friend single_level_state;
-    struct single_level_state final:
-      public state_base_type
+    struct single_level_state final
     {
         constexpr void operator()(queue & p_search_states,
                                   payloads_type & p_payloads) noexcept
         {
-          tokenizer_type topic_tokens{state_base_type::m_topic};
+          tokenizer_type topic_tokens{m_topic};
           std::ignore = topic_tokens.scan();
 
           auto rest_topic{topic_tokens.source()};
           if(rest_topic.empty())
           {
             // Topic is 'abc/+', so add payloads.
-            add_payload(state_base_type::m_state, p_payloads);
+            add_payload(m_state, p_payloads);
           }
           else
           {
             // Try to match 'abc/+/cde
-            p_search_states.emplace_back(search_state{literal_state{rest_topic, state_base_type::m_state}});
+            p_search_states.emplace_back(literal_state{rest_topic, m_state});
           }
 
           if(topic_tokens.has_more())
@@ -197,27 +192,32 @@ class Query final
             // mqtt-v5.0 4.7.1.3 Single-level wildcard
             // 2979: "sport/+” does not match “sport” but it does match “sport/”.
             // Topic is 'abc/cde/', try to match 'abc/cde/+'
-            add_sub_state<single_level_state>(single_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
+            add_sub_state<single_level_state>(single_level_wildcard, rest_topic, m_state, p_search_states);
           }
           // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
-          add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, state_base_type::m_state, p_search_states);
+          add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, m_state, p_search_states);
         }
+
+        topic_type m_topic{};
+        node_ptr m_state = nullptr;
     };
 
     friend multi_level_state;
-    struct multi_level_state final:
-      public state_base_type
+    struct multi_level_state final
     {
         constexpr void operator()(queue & /* p_search_states */,
                                   payloads_type & p_payloads) noexcept
         {
-          add_payload(state_base_type::m_state, p_payloads);
+          add_payload(m_state, p_payloads);
         }
+
+        topic_type m_topic{};
+        node_ptr m_state = nullptr;
     };
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(search_state{literal_state{p_topic, m_nodes.data()}});
+      m_search_states.emplace_back(literal_state{p_topic, m_nodes.data()});
       if(mqtt_detail::TopicSysChar != p_topic[0])
       {
         add_sub_state<single_level_state>(single_level_wildcard, p_topic, m_nodes.data(), m_search_states);
