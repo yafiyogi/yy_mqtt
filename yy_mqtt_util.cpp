@@ -39,7 +39,8 @@
 namespace yafiyogi::yy_mqtt {
 namespace {
 
-using tokenizer_type = yy_util::tokenizer<std::string_view::value_type>;
+using tokenizer_type = yy_util::tokenizer<std::string_view::value_type,
+                                          mqtt_detail::TopicLevelSeparatorChar>;
 using token_type = tokenizer_type::token_type;
 
 }
@@ -52,8 +53,8 @@ std::string_view topic_trim(const std::string_view p_topic) noexcept
 TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
                                       const std::string_view p_topic) noexcept
 {
-  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
-                           mqtt_detail::TopicLevelSeparatorChar};
+  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic)};
+
   p_levels.clear();
   p_levels.reserve(static_cast<std::size_t>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
 
@@ -78,8 +79,8 @@ TopicLevelsView topic_tokenize_view(const std::string_view p_topic) noexcept
 TopicLevels & topic_tokenize(TopicLevels & p_levels,
                              const std::string_view p_topic) noexcept
 {
-  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
-                           mqtt_detail::TopicLevelSeparatorChar};
+  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic)};
+
   p_levels.clear();
   p_levels.reserve(static_cast<std::size_t>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
 
@@ -136,8 +137,7 @@ TopicValidStatus topic_validate(std::string_view p_topic,
     return TopicValidStatus::BadParam;
   }
 
-  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic),
-                           mqtt_detail::TopicLevelSeparatorChar};
+  tokenizer_type tokenizer{yy_quad::make_const_span(p_topic)};
 
   while(!tokenizer.empty() || tokenizer.has_more())
   {
@@ -188,18 +188,16 @@ TopicMatchStatus topic_match(const std::string_view & p_filter,
                              const std::string_view & p_topic) noexcept
 {
   auto filter{yy_quad::make_const_span(p_filter)};
-  auto topic{yy_quad::make_const_span(p_topic)};
+  tokenizer_type filter_tokenizer{filter};
 
-  tokenizer_type filter_tokenizer{filter,
-                                  mqtt_detail::TopicLevelSeparatorChar};
-  tokenizer_type topic_tokenizer{topic,
-                                 mqtt_detail::TopicLevelSeparatorChar};
+  auto topic{yy_quad::make_const_span(p_topic)};
+  tokenizer_type topic_tokenizer{topic};
 
   if(!p_filter.empty()
      && !p_topic.empty())
   {
-    auto filter_level_0{tokenizer_type::scan(filter, filter_tokenizer.delim())};
-    auto topic_level_0{tokenizer_type::scan(topic, topic_tokenizer.delim())};
+    auto filter_level_0{tokenizer_type::scan(filter)};
+    auto topic_level_0{tokenizer_type::scan(topic)};
 
     if(((mqtt_detail::TopicMultiLevelWildcard == filter_level_0)
         || (mqtt_detail::TopicSingleLevelWildcard == filter_level_0))
