@@ -224,13 +224,13 @@ class Query final
         add_sub_state<multi_level_state>(multi_level_wildcard, p_topic, m_nodes.data(), m_search_states);
       }
 
+      auto do_state_find = [this](auto & finder) {
+        finder(m_search_states, m_payloads);
+      };
+
       while(!m_search_states.empty())
       {
         auto & state = m_search_states.front();
-
-        auto do_state_find = [this](auto & finder) {
-          finder(m_search_states, m_payloads);
-        };
 
         std::visit(do_state_find, state);
 
