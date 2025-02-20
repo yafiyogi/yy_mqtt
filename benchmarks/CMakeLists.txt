@@ -53,18 +53,22 @@ add_executable(benchmark_yy_mqtt
 
 target_compile_options(yy_mqtt
   PRIVATE
-  "-DSPDLOG_COMPILED_LIB"
-  "-DSPDLOG_FMT_EXTERNAL")
+    "-DSPDLOG_COMPILED_LIB"
+    "-DSPDLOG_FMT_EXTERNAL")
 
 target_include_directories(benchmark_yy_mqtt
   PRIVATE
     "${PROJECT_SOURCE_DIR}/.."
     "${CMAKE_INSTALL_PREFIX}/include" )
 
+target_include_directories(benchmark_yy_mqtt
+  SYSTEM PRIVATE
+    "${YY_THIRD_PARTY_LIBRARY}/include" )
+
 target_link_directories(benchmark_yy_mqtt
   PRIVATE
-  "${YY_THIRD_PARTY_LIBRARY}/lib"
-  /opt/local/lib )
+    "${YY_THIRD_PARTY_LIBRARY}/lib"
+    "/opt/local/lib" )
 
 target_link_libraries(benchmark_yy_mqtt
   yy_mqtt
