@@ -44,12 +44,14 @@ class Query final
     using traits = TrieTraits;
     using label_type = typename traits::label_type;
     using node_type = typename traits::ptr_node_type;
+    using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
+    using value_ptr = typename traits::value_ptr;
     using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
 
-    using queue = yy_quad::vector<std::tuple<node_type *, label_type>>;
-    using payloads_type = yy_quad::simple_vector<value_type *>;
+    using queue = yy_quad::vector<std::tuple<node_ptr, label_type>>;
+    using payloads_type = yy_quad::simple_vector<value_ptr>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
 
     constexpr explicit Query(trie_vector && p_nodes,
@@ -75,13 +77,13 @@ class Query final
       m_search_states.clear(yy_quad::ClearAction::Keep);
       m_payloads.clear(yy_quad::ClearAction::Keep);
 
-      add_state(label_type{}, m_nodes.data(), m_search_states);
+      add_state(label_type{}, node_ptr{m_nodes.data()}, m_search_states);
 
       if(!topic.empty())
       {
         if(mqtt_detail::TopicSysChar != topic[0])
         {
-          add_wildcards(m_nodes.data(), m_search_states);
+          add_wildcards(node_ptr{m_nodes.data()}, m_search_states);
         }
 
         const auto max = topic.size();
@@ -98,14 +100,14 @@ class Query final
     }
 
   private:
-    constexpr void add_wildcards(node_type * const p_node,
+    constexpr void add_wildcards(node_ptr const p_node,
                                  queue & p_states_list) noexcept
     {
       add_node_state(mqtt_detail::TopicSingleLevelWildcardChar, p_node, p_states_list);
       add_node_state(mqtt_detail::TopicMultiLevelWildcardChar, p_node, p_states_list);
     }
 
-    static constexpr void add_payload(node_type * p_node,
+    static constexpr void add_payload(node_ptr p_node,
                                       payloads_type & p_payloads) noexcept
     {
       if(!p_node->empty())
@@ -114,12 +116,12 @@ class Query final
       }
     }
 
-    static constexpr node_type * get_state(node_type * p_node,
-                                           const label_type p_label)
+    static constexpr node_ptr get_state(node_ptr p_node,
+                                        const label_type p_label)
     {
       YY_ASSERT(p_node);
 
-      node_type * l_state = nullptr;
+      node_ptr l_state{};
       auto l_next_state_do = [&l_state](auto edge_node, auto /* pos */) {
         l_state = *edge_node;
       };
@@ -130,7 +132,7 @@ class Query final
     }
 
     static constexpr void add_state(const label_type label,
-                                    node_type * p_state,
+                                    node_ptr p_state,
                                     queue & p_states_list) noexcept
     {
       YY_ASSERT(p_state);
@@ -139,12 +141,12 @@ class Query final
     }
 
     static constexpr void add_node_state(const label_type p_label,
-                                         node_type * p_node,
+                                         node_ptr p_node,
                                          queue & p_states_list)
     {
       YY_ASSERT(p_node);
 
-      auto add_state_do = [&p_label, &p_states_list](node_type ** edge_node, size_type /* pos */) {
+      auto add_state_do = [&p_label, &p_states_list](node_ptr * edge_node, size_type /* pos */) {
         add_state(p_label, *edge_node, p_states_list);
       };
 
@@ -172,7 +174,7 @@ class Query final
             if(mqtt_detail::TopicLevelSeparatorChar == p_ch)
             {
               // Finished matching '+'
-              if(node_type * separator = get_state(state, mqtt_detail::TopicLevelSeparatorChar);
+              if(node_ptr separator{get_state(state, mqtt_detail::TopicLevelSeparatorChar)};
                  separator)
               {
                 if(p_last)
@@ -218,7 +220,7 @@ class Query final
 
           default:
             // Find p_ch.
-            if(node_type * next_state = get_state(state, p_ch);
+            if(node_ptr next_state{get_state(state, p_ch)};
                next_state)
             {
               if(p_last)
@@ -238,7 +240,7 @@ class Query final
                 else
                 {
                   // Matched xxx/ so far.
-                  if(node_type * separator = get_state(next_state, mqtt_detail::TopicLevelSeparatorChar);
+                  if(node_ptr separator{get_state(next_state, mqtt_detail::TopicLevelSeparatorChar)};
                      separator)
                   {
                     // Add # wildcard to match xxx/#

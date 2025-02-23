@@ -49,18 +49,19 @@ class Query final
     using node_type = typename traits::ptr_node_type;
     using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
+    using value_ptr = typename traits::value_ptr;
     using trie_vector = typename traits::ptr_trie_vector;
     using trie_iterator = trie_vector::iterator;
     using data_vector = typename traits::data_vector;
     using topic_type = yy_quad::const_span<label_type>;
     using topic_l_value_ref = typename yy_traits::ref_traits<topic_type>::l_value_ref;
-    using payloads_type = yy_quad::simple_vector<value_type *>;
+    using payloads_type = yy_quad::simple_vector<value_ptr>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
     enum class search_type:uint8_t {Literal, SingleLevel, MultiLevel};
     struct state_type final
     {
         topic_type topic{};
-        node_type * state = nullptr;
+        node_ptr state{};
         search_type search = search_type::Literal;
     };
     using queue = yy_quad::vector<state_type>;
@@ -100,13 +101,13 @@ class Query final
     static constexpr void add_sub_state(const label_type p_label,
                                         topic_type p_topic,
                                         search_type p_type,
-                                        node_type * p_state,
+                                        node_ptr p_state,
                                         queue & p_states_list)
     {
       YY_ASSERT(p_state);
 
       auto sub_state_do = [p_topic, p_type, &p_states_list]
-                          (node_type ** edge_node, size_type /* pos */) {
+                          (node_ptr * edge_node, size_type /* pos */) {
         p_states_list.emplace_back(p_topic, *edge_node, p_type);
       };
 
@@ -136,12 +137,12 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      auto do_add_separator_wildcards = [this](node_type ** separator_node, size_type) {
+      auto do_add_separator_wildcards = [this](node_ptr * separator_node, size_type) {
         add_wildcards(*separator_node, topic_type{}, m_search_states);
       };
 
-      m_search_states.emplace_back(p_topic, m_nodes.data(), search_type::Literal);
-      add_wildcards(m_nodes.data(), p_topic, m_search_states);
+      m_search_states.emplace_back(p_topic, node_ptr{m_nodes.data()}, search_type::Literal);
+      add_wildcards(node_ptr{m_nodes.data()}, p_topic, m_search_states);
 
       while(!m_search_states.empty())
       {
@@ -152,7 +153,7 @@ class Query final
         {
           case search_type::Literal:
           {
-            auto next_state_do = [&state](node_type ** edge_node, size_type) {
+            auto next_state_do = [&state](node_ptr * edge_node, size_type) {
               state = *edge_node;
             };
 
@@ -221,7 +222,7 @@ class Query final
             else
             {
               // Topic is 'abc/+/...' so ...
-              auto separator_do = [&search_topic, this](node_type ** edge_node, size_type) {
+              auto separator_do = [&search_topic, this](node_ptr * edge_node, size_type) {
                 auto separator_state = *edge_node;
                 search_topic.inc_begin();
                 // ... try to match 'abc/+/cde

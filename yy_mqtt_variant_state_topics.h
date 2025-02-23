@@ -26,8 +26,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <string>
 #include <string_view>
 #include <variant>
@@ -163,7 +161,7 @@ class Query final
         }
 
         topic_type m_topic{};
-        node_ptr m_state = nullptr;
+        node_ptr m_state{};
     };
 
     friend single_level_state;
@@ -199,7 +197,7 @@ class Query final
         }
 
         topic_type m_topic{};
-        node_ptr m_state = nullptr;
+        node_ptr m_state{};
     };
 
     friend multi_level_state;
@@ -212,16 +210,16 @@ class Query final
         }
 
         topic_type m_topic{};
-        node_ptr m_state = nullptr;
+        node_ptr m_state{};
     };
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(literal_state{p_topic, m_nodes.data()});
+      m_search_states.emplace_back(literal_state{p_topic, node_ptr{m_nodes.data()}});
       if(mqtt_detail::TopicSysChar != p_topic[0])
       {
-        add_sub_state<single_level_state>(single_level_wildcard, p_topic, m_nodes.data(), m_search_states);
-        add_sub_state<multi_level_state>(multi_level_wildcard, p_topic, m_nodes.data(), m_search_states);
+        add_sub_state<single_level_state>(single_level_wildcard, p_topic, node_ptr{m_nodes.data()}, m_search_states);
+        add_sub_state<multi_level_state>(multi_level_wildcard, p_topic, node_ptr{m_nodes.data()}, m_search_states);
       }
 
       auto do_state_find = [this](auto & finder) {

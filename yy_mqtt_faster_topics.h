@@ -50,11 +50,13 @@ class Query final
     using traits = TrieTraits;
     using label_type = typename traits::label_type;
     using node_type = typename traits::ptr_node_type;
+    using node_ptr = typename traits::ptr_node_ptr;
     using value_type = typename traits::value_type;
+    using value_ptr = typename traits::value_ptr;
     using trie_vector = typename traits::ptr_trie_vector;
     using data_vector = typename traits::data_vector;
     using topic_type = yy_quad::const_span<std::string_view::value_type>;
-    using payloads_type = yy_quad::simple_vector<value_type *>;
+    using payloads_type = yy_quad::simple_vector<value_ptr>;
     using payloads_span_type = yy_quad::span<typename payloads_type::value_type>;
     enum class search_type:uint8_t {Literal, SingleLevelWild, MultiLevelWild};
     using tokenizer_type = typename traits::tokenizer_type;
@@ -62,7 +64,7 @@ class Query final
     struct state_type final
     {
         topic_type topic{};
-        node_type * state = nullptr;
+        node_ptr state{};
         search_type search = search_type::Literal;
     };
     using queue = yy_quad::vector<state_type>;
@@ -102,13 +104,13 @@ class Query final
     static constexpr void add_sub_state(const topic_type p_label,
                                         topic_type p_topic,
                                         search_type p_type,
-                                        node_type * p_state,
+                                        node_ptr p_state,
                                         queue & p_states_list)
     {
       YY_ASSERT(p_state);
 
       auto sub_state_do = [p_label, p_topic, p_type, &p_states_list]
-                          (node_type ** edge_node, size_type /* pos */) {
+                          (node_ptr * edge_node, size_type /* pos */) {
         p_states_list.emplace_back(p_topic, *edge_node, p_type);
       };
 
@@ -118,7 +120,7 @@ class Query final
     static constexpr auto single_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicSingleLevelWildcard)};
     static constexpr auto multi_level_wildcard{yy_quad::make_const_span(mqtt_detail::TopicMultiLevelWildcard)};
 
-    static constexpr void add_wildcards(node_type * p_node,
+    static constexpr void add_wildcards(node_ptr p_node,
                                         topic_type p_topic,
                                         queue & p_states_list) noexcept
     {
@@ -128,7 +130,7 @@ class Query final
       add_sub_state(multi_level_wildcard, p_topic, search_type::MultiLevelWild, p_node, p_states_list);
     }
 
-    static constexpr bool add_payload(node_type * p_node,
+    static constexpr bool add_payload(node_ptr p_node,
                                       payloads_type & p_payloads) noexcept
     {
       YY_ASSERT(p_node);
@@ -143,13 +145,18 @@ class Query final
       return add;
     }
 
+    constexpr node_ptr nodes_root() noexcept
+    {
+      return node_ptr{m_nodes.data()};
+    }
+
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(p_topic, m_nodes.data(), search_type::Literal);
+      m_search_states.emplace_back(p_topic, nodes_root(), search_type::Literal);
       if(mqtt_detail::TopicSysChar != p_topic[0])
       {
-        add_sub_state(single_level_wildcard, p_topic, search_type::SingleLevelWild, m_nodes.data(), m_search_states);
-        add_sub_state(multi_level_wildcard, p_topic, search_type::MultiLevelWild, m_nodes.data(), m_search_states);
+        add_sub_state(single_level_wildcard, p_topic, search_type::SingleLevelWild, nodes_root(), m_search_states);
+        add_sub_state(multi_level_wildcard, p_topic, search_type::MultiLevelWild, nodes_root(), m_search_states);
       }
 
       while(!m_search_states.empty())
@@ -161,7 +168,7 @@ class Query final
         {
           case search_type::Literal:
           {
-            auto next_state_do = [&state](node_type ** edge_node, size_type) {
+            auto next_state_do = [&state](node_ptr * edge_node, size_type) {
               state = *edge_node;
             };
 

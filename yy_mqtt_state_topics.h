@@ -129,7 +129,7 @@ class Query final
 
       private:
         topic_type m_topic{};
-        node_ptr m_state = nullptr;
+        node_ptr m_state{};
         find_fn m_find = &null_find;
     };
 
@@ -242,13 +242,18 @@ class Query final
       add_payload(p_state, p_payloads);
     }
 
+    constexpr node_ptr nodes_root() noexcept
+    {
+      return node_ptr{m_nodes.data()};
+    }
+
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(p_topic, m_nodes.data(), literal_find);
+      m_search_states.emplace_back(p_topic, nodes_root(), literal_find);
       if(mqtt_detail::TopicSysChar != p_topic[0])
       {
-        add_sub_state(single_level_wildcard, p_topic, m_nodes.data(), &single_level_find, m_search_states);
-        add_sub_state(multi_level_wildcard, p_topic, m_nodes.data(), &multi_level_find, m_search_states);
+        add_sub_state(single_level_wildcard, p_topic, nodes_root(), &single_level_find, m_search_states);
+        add_sub_state(multi_level_wildcard, p_topic, nodes_root(), &multi_level_find, m_search_states);
       }
 
       while(!m_search_states.empty())
