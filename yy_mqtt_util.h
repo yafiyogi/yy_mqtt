@@ -42,12 +42,12 @@ TopicLevels & topic_tokenize(TopicLevels & p_levels,
 TopicLevels topic_tokenize(const std::string_view p_topic) noexcept;
 enum class TopicValidStatus { Valid, Invalid, BadParam};
 TopicValidStatus topic_validate(std::string_view topic,
-                        const TopicType p_type);
+                                const TopicType p_type);
 TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
-                           const TopicType p_type);
+                                const TopicType p_type);
 enum class TopicMatchStatus { Match, Fail, Continue};
 TopicMatchStatus topic_match(const std::string_view & p_filter,
-                                 const std::string_view & p_topic) noexcept;
+                             const std::string_view & p_topic) noexcept;
 TopicMatchStatus topic_match(const TopicLevelsView & p_filter,
                              const TopicLevelsView & p_topic) noexcept;
 

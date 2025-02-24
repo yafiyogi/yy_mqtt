@@ -110,7 +110,7 @@ class Query final
       YY_ASSERT(p_state);
 
       auto sub_state_do = [p_label, p_topic, p_type, &p_states_list]
-                          (node_ptr * edge_node, size_type /* pos */) {
+                          (auto edge_node, size_type /* pos */) {
         p_states_list.emplace_back(p_topic, *edge_node, p_type);
       };
 
@@ -168,7 +168,7 @@ class Query final
         {
           case search_type::Literal:
           {
-            auto next_state_do = [&state](node_ptr * edge_node, size_type) {
+            auto next_state_do = [&state](auto edge_node, size_type) {
               state = *edge_node;
             };
 

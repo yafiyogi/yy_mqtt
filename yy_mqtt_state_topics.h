@@ -140,7 +140,7 @@ class Query final
                                         queue & p_search_states) noexcept
     {
       auto sub_state_do = [p_topic, p_find, &p_search_states]
-                          (node_ptr * edge_node, size_type /* pos */) {
+                          (auto edge_node, size_type /* pos */) {
         p_search_states.emplace_back(p_topic, *edge_node, p_find);
       };
 
@@ -171,7 +171,7 @@ class Query final
                                        queue & p_search_states,
                                        payloads_type & p_payloads) noexcept
     {
-      auto next_state_do = [&p_state](node_ptr * edge_node, size_type) {
+      auto next_state_do = [&p_state](auto edge_node, size_type) {
         p_state = *edge_node;
       };
 

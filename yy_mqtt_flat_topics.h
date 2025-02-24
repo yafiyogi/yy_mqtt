@@ -146,7 +146,7 @@ class Query final
     {
       YY_ASSERT(p_node);
 
-      auto add_state_do = [&p_label, &p_states_list](node_ptr * edge_node, size_type /* pos */) {
+      auto add_state_do = [&p_label, &p_states_list](auto edge_node, size_type /* pos */) {
         add_state(p_label, *edge_node, p_states_list);
       };
 

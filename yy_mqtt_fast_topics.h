@@ -107,7 +107,7 @@ class Query final
       YY_ASSERT(p_state);
 
       auto sub_state_do = [p_topic, p_type, &p_states_list]
-                          (node_ptr * edge_node, size_type /* pos */) {
+                          (auto edge_node, size_type /* pos */) {
         p_states_list.emplace_back(p_topic, *edge_node, p_type);
       };
 
@@ -137,7 +137,7 @@ class Query final
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      auto do_add_separator_wildcards = [this](node_ptr * separator_node, size_type) {
+      auto do_add_separator_wildcards = [this](auto separator_node, size_type) {
         add_wildcards(*separator_node, topic_type{}, m_search_states);
       };
 
@@ -153,7 +153,7 @@ class Query final
         {
           case search_type::Literal:
           {
-            auto next_state_do = [&state](node_ptr * edge_node, size_type) {
+            auto next_state_do = [&state](auto edge_node, size_type) {
               state = *edge_node;
             };
 
@@ -189,7 +189,7 @@ class Query final
               {
                 // In case of 'abc/cde', try to match 'abc/cde/+' & 'abc/cde/#'
                 std::ignore = state->find_edge(do_add_separator_wildcards,
-                                              mqtt_detail::TopicLevelSeparatorChar);
+                                               mqtt_detail::TopicLevelSeparatorChar);
               }
             }
             break;
@@ -217,12 +217,12 @@ class Query final
               add_payload(state, m_payloads);
 
               std::ignore = state->find_edge(do_add_separator_wildcards,
-                                            mqtt_detail::TopicLevelSeparatorChar);
+                                             mqtt_detail::TopicLevelSeparatorChar);
             }
             else
             {
               // Topic is 'abc/+/...' so ...
-              auto separator_do = [&search_topic, this](node_ptr * edge_node, size_type) {
+              auto separator_do = [&search_topic, this](auto edge_node, size_type) {
                 auto separator_state = *edge_node;
                 search_topic.inc_begin();
                 // ... try to match 'abc/+/cde
