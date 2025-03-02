@@ -95,7 +95,7 @@ class Query final
         payloads.reserve(3);
 
         const auto max = topic.size();
-        for(size_t idx = 0; idx < max; ++idx)
+        for(size_type idx = 0; idx < max; ++idx)
         {
           bool more = next(topic[idx], idx == (max - 1), payloads);
 

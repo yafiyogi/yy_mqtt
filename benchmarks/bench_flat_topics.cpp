@@ -34,8 +34,8 @@ BENCHMARK_F(TopicsFixtureType, flat_lookup)(::benchmark::State & state)
 {
   auto automaton = m_flat_topics.create_automaton();
 
-  size_t idx = 0;
-  std::size_t count = 0;
+  size_type idx = 0;
+  size_type count = 0;
 
   while(state.KeepRunning())
   {

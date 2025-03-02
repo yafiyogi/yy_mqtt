@@ -49,7 +49,6 @@ struct topics_traits final
     using root_node_ptr = typename trie_node_traits::root_node_ptr;
     using node_edge = typename trie_node_traits::node_edge;
     using value_type = typename trie_node_traits::value_type;
-    using size_type = std::size_t;
 };
 
 template<typename ValueType>

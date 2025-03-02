@@ -43,11 +43,11 @@ namespace {
 
 template<typename T,
          typename ArrayT,
-         size_t Idx>
+         size_type Idx>
 std::array<T, Idx> shuffle_array(const ArrayT (& arr_in)[Idx]) noexcept
 {
   std::array<T, Idx> arr{};
-  for(size_t idx = 0; idx < Idx; ++idx)
+  for(size_type idx = 0; idx < Idx; ++idx)
   {
     arr[idx] = arr_in[idx];
   }
@@ -511,17 +511,17 @@ void TopicsFixtureType::SetUp(const ::benchmark::State & /* st */)
   }
 }
 
-std::string_view TopicsFixtureType::query(size_t idx)
+std::string_view TopicsFixtureType::query(size_type idx)
 {
   return g_query[idx];
 }
 
-std::size_t TopicsFixtureType::query_size()
+size_type TopicsFixtureType::query_size()
 {
   return g_query.size();
 }
 
-std::size_t TopicsFixtureType::topics_size()
+size_type TopicsFixtureType::topics_size()
 {
   return topics.size();
 }

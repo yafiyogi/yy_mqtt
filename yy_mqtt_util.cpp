@@ -56,7 +56,7 @@ TopicLevelsView & topic_tokenize_view(TopicLevelsView & p_levels,
   tokenizer_type tokenizer{yy_quad::make_const_span(p_topic)};
 
   p_levels.clear();
-  p_levels.reserve(static_cast<std::size_t>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
+  p_levels.reserve(static_cast<size_type>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
 
   while(!tokenizer.empty() || tokenizer.has_more())
   {
@@ -82,7 +82,7 @@ TopicLevels & topic_tokenize(TopicLevels & p_levels,
   tokenizer_type tokenizer{yy_quad::make_const_span(p_topic)};
 
   p_levels.clear();
-  p_levels.reserve(static_cast<std::size_t>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
+  p_levels.reserve(static_cast<size_type>(std::count(p_topic.begin(), p_topic.end(), mqtt_detail::TopicLevelSeparatorChar) + 1));
 
   while(!tokenizer.empty() || tokenizer.has_more())
   {
@@ -164,8 +164,8 @@ TopicValidStatus topic_validate(const TopicLevelsView & p_levels,
     return TopicValidStatus::BadParam;
   }
 
-  const std::size_t max_levels = p_levels.size();
-  std::size_t level_no = 0;
+  const size_type max_levels = p_levels.size();
+  size_type level_no = 0;
 
 
   for(const auto & level : p_levels)
@@ -255,9 +255,9 @@ TopicMatchStatus topic_match(const std::string_view & p_filter,
 TopicMatchStatus topic_match(const TopicLevelsView & p_filter,
                              const TopicLevelsView & p_topic) noexcept
 {
-  std::size_t filter_level_no = 0;
-  const std::size_t max_topic_level = p_topic.size();
-  std::size_t topic_level_no = 0;
+  size_type filter_level_no = 0;
+  const size_type max_topic_level = p_topic.size();
+  size_type topic_level_no = 0;
 
   if(!p_filter.empty()
      && !p_topic.empty()
