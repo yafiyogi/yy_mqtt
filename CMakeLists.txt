@@ -63,7 +63,6 @@ install(TARGETS yy_mqtt
   FILE_SET HEADERS DESTINATION include/yy_mqtt)
 
 install(EXPORT yy_mqttTargets
-  FILE yy_mqttTargets.cmake
   NAMESPACE yy_mqtt::
   DESTINATION lib/cmake/yy_mqtt)
 
