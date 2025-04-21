@@ -106,7 +106,7 @@ class Query final
     {
       auto sub_state_do = [&p_topic, &p_search_states]
                           (auto edge_node, size_type /* pos */) {
-        p_search_states.emplace_back(StateType{p_topic, *edge_node});
+        p_search_states.emplace_back(std::in_place_type_t<StateType>{}, p_topic, *edge_node);
       };
 
       std::ignore = p_node->find_edge(sub_state_do, p_label);
@@ -127,6 +127,9 @@ class Query final
     friend literal_state;
     struct literal_state final
     {
+        topic_type m_topic{};
+        node_ptr m_state{};
+
         constexpr void operator()(queue & p_search_states,
                                   payloads_type & p_payloads) noexcept
         {
@@ -159,14 +162,14 @@ class Query final
           // Topic is 'abc/cde' or 'abc/cde/', add any payloads.
           add_payload(m_state, p_payloads);
         }
-
-        topic_type m_topic{};
-        node_ptr m_state{};
     };
 
     friend single_level_state;
     struct single_level_state final
     {
+        topic_type m_topic{};
+        node_ptr m_state{};
+
         constexpr void operator()(queue & p_search_states,
                                   payloads_type & p_payloads) noexcept
         {
@@ -182,7 +185,7 @@ class Query final
           else
           {
             // Try to match 'abc/+/cde
-            p_search_states.emplace_back(literal_state{rest_topic, m_state});
+            p_search_states.emplace_back(std::in_place_type_t<literal_state>{}, rest_topic, m_state);
           }
 
           if(topic_tokens.has_more())
@@ -195,27 +198,24 @@ class Query final
           // Topic is 'abc/cde' or 'abc/cde/', so try to match 'abc/cde/#'
           add_sub_state<multi_level_state>(multi_level_wildcard, rest_topic, m_state, p_search_states);
         }
-
-        topic_type m_topic{};
-        node_ptr m_state{};
     };
 
     friend multi_level_state;
     struct multi_level_state final
     {
+        topic_type m_topic{};
+        node_ptr m_state{};
+
         constexpr void operator()(queue & /* p_search_states */,
                                   payloads_type & p_payloads) noexcept
         {
           add_payload(m_state, p_payloads);
         }
-
-        topic_type m_topic{};
-        node_ptr m_state{};
     };
 
     constexpr void find_span(topic_type p_topic) noexcept
     {
-      m_search_states.emplace_back(literal_state{p_topic, node_ptr{m_nodes.data()}});
+      m_search_states.emplace_back(std::in_place_type_t<literal_state>{}, p_topic, node_ptr{m_nodes.data()});
       if(mqtt_detail::TopicSysChar != p_topic[0])
       {
         add_sub_state<single_level_state>(single_level_wildcard, p_topic, node_ptr{m_nodes.data()}, m_search_states);
