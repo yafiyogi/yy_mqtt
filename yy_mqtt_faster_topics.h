@@ -177,9 +177,7 @@ class Query final
             bool found = false;
             while(!topic_tokens.empty())
             {
-              const auto level{topic_tokens.scan()};
-
-              found = state->find_edge(next_state_do, level);
+              found = state->find_edge(next_state_do, topic_tokens.scan());
 
               if(!found)
               {

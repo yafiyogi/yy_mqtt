@@ -141,8 +141,7 @@ class Query final
 
           while(!topic_tokens.empty())
           {
-            if(const auto level{topic_tokens.scan()};
-               !m_state->find_edge(next_state_do, level))
+            if(!m_state->find_edge(next_state_do, topic_tokens.scan()))
             {
               return;
             }
