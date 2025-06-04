@@ -64,6 +64,8 @@ target_link_directories(test_yy_mqtt
   PRIVATE
     "/opt/local/lib" )
 
+target_link_directories(test_yy_mqtt BEFORE PRIVATE ${YY_THIRD_PARTY_LIBRARY}/lib)
+
 target_link_libraries(test_yy_mqtt
   yy_mqtt
   yy_test::yy_test
