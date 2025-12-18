@@ -77,4 +77,4 @@ install(FILES "yy_mqttConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/yy_mqttConfigVe
 add_subdirectory(unit_tests)
 add_subdirectory(benchmarks)
 
-add_yy_tidy_all(yy_mqtt)
+add_yy_tidy_targets(yy_mqtt)
