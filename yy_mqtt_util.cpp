@@ -196,8 +196,8 @@ TopicMatchStatus topic_match(const std::string_view & p_filter,
   if(!p_filter.empty()
      && !p_topic.empty())
   {
-    auto filter_level_0{tokenizer_type::scan(filter)};
-    auto topic_level_0{tokenizer_type::scan(topic)};
+    auto filter_level_0{tokenizer_type::scanner::scan(filter)};
+    auto topic_level_0{tokenizer_type::scanner::scan(topic)};
 
     if(((mqtt_detail::TopicMultiLevelWildcard == filter_level_0)
         || (mqtt_detail::TopicSingleLevelWildcard == filter_level_0))
