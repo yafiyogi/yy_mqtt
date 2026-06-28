@@ -72,7 +72,6 @@ target_link_libraries(test_yy_mqtt
   yy_cpp::yy_cpp
   Boost::locale
   fmt::fmt
-  spdlog::spdlog
   GTest::gtest
   GTest::gtest_main)
 

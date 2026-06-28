@@ -76,7 +76,6 @@ target_link_libraries(benchmark_yy_mqtt
   benchmark::benchmark
   Boost::locale
   fmt::fmt
-  spdlog::spdlog
   #profiler
   )
 
